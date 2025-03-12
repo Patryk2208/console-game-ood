@@ -8,9 +8,9 @@ public interface IDecorable<T> where T : class
     public T Decorated { get; set; }
 }
 
-public abstract class MoneyDecorator : Money
+public abstract class MineralDecorator : Mineral
 {
-    protected MoneyDecorator(Money item)
+    protected MineralDecorator(Mineral item)
     {
         Decorated = item;
         Pos = Decorated.Pos;
@@ -22,11 +22,11 @@ public abstract class MoneyDecorator : Money
     }
 }
 
-public class PreciousMoney : MoneyDecorator
+public class MagicMineral : MineralDecorator
 {
-    public PreciousMoney(Money item) : base(item)
+    public MagicMineral(Mineral item) : base(item)
     {
-        Value = Decorated.Value * 2;
-        Name = "(Precious) " + Decorated.Name;
+        Quantity = Decorated.Quantity * 3;
+        Name = "(Magic) " + Decorated.Name;
     }
 }

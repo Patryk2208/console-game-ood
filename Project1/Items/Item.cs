@@ -12,8 +12,8 @@ public abstract class Item : IMappable, IDecorable<Item>
     public Item Decorated { get; set; }
     public abstract void AssignAttributes(Dictionary<string, int> attributes);
     public abstract override string ToString();
-    public abstract void Interact(Player p, Item? item);
-    public abstract bool Apply(Body b, string bpName, Item? item);
+    public abstract void Interact(Player p);
+    public abstract bool Apply(Body b, string bpName);
     public abstract string PrintName();
 }
 

@@ -55,6 +55,10 @@ public class ConsoleStatusBarArea : ConsoleArea
         coursor = coursor with { X = coursor.X + 1 };
         ConsoleWriter.InsertText(ref _gameBoard, coursor, $"Sack value: {a.Eq.SackValue}");
         coursor = coursor with { X = coursor.X + 1 };
+        ConsoleWriter.InsertText(ref _gameBoard, coursor, $"Coins: {a.Eq.CoinCount}");
+        coursor = coursor with { X = coursor.X + 1 };
+        ConsoleWriter.InsertText(ref _gameBoard, coursor, $"Gold: {a.Eq.GoldCount}");
+        coursor = coursor with { X = coursor.X + 1 };
         ConsoleWriter.InsertText(ref _gameBoard, coursor, "EQ:");
         int counter = 0;
         foreach (var it in a.Eq.Eq)

@@ -150,5 +150,13 @@ public class ConsoleDisplay : ConsoleArea, IDisplay
             GameBoard[i, StatusBarArea.StartPosition.Y - 1] = verticalFrame;
             GameBoard[i, Width - 1] = verticalFrame;
         }
+        Console.SetCursorPosition(StartPosition.Y, StartPosition.X + Height + 1);
+        Console.WriteLine("""
+                          (W, S, A, D) steering, E - pickup selected to Eq, T - throw away selected from Eq, 
+                          ArrowUP/DOWN - go through items to pickup, ArrowLeft/Right - go through items in Eq,
+                          P - Place selected item in right hand/Move item from right hand back to Eq, 
+                          L - Place selected item in left hand/Move item from left hand back to Eq, 
+                          Esc - Exit
+                          """);
     }
 }

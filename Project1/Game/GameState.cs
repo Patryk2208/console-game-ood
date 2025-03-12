@@ -35,7 +35,7 @@ public class SinglePlayerGameState : GameState
         SamePosIndex = 0;
         for (int i = 0; i < itemsCount; i++)
         {
-            Items.Add(new PreciousMoney(new Coin()));
+            Items.Add(new Coin());
         }
         for (int i = 0; i < itemsCount; i++)
         {
@@ -59,7 +59,7 @@ public class SinglePlayerGameState : GameState
         }
         for (int i = 0; i < itemsCount; i++)
         {
-            Items.Add(new Sand());
+            Items.Add(new MagicMineral(new Sand()));
         }
         for (int i = 0; i < itemsCount; i++)
         {

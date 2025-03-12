@@ -45,13 +45,13 @@ public class Player : Being
 
     public void PickUpItem(Item item)
     {
-        item.Interact(this, null);
+        item.Interact(this);
     }
 
     public void TryTakeItem(Body b, string bpName)
     {
         var item = Eq.Eq[Eq.EqPointer];
-        if (item.Apply(b, bpName, null))
+        if (item.Apply(b, bpName))
         {
             Eq.RemoveItemFromEq();
         }

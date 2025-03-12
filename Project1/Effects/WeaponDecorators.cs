@@ -11,20 +11,13 @@ public abstract class WeaponDecorator : Weapon
         Pos = Decorated.Pos;
         Color = Decorated.Color;
         Damage = Decorated.Damage;
+        IsTwoHanded = Decorated.IsTwoHanded;
     }
-
     public abstract override void AssignAttributes(Dictionary<string, int> attributes);
-    public override void Interact(Player p, Item? item)
-    {
-        Decorated.Interact(p, item ?? this);
-    }
+
     public override string ToString()
     {
         return Decorated.ToString();
-    }
-    public override bool Apply(Body b, string bpName, Item? item)
-    {
-        return Decorated.Apply(b, bpName, item ?? this);
     }
 }
 

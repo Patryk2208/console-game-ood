@@ -19,7 +19,7 @@ class Program
         var gs = new SinglePlayerGameState(pl, wrld, 3);
         var cts = new CancellationTokenSource();
         var mtx = new Mutex();
-        var testDisp = new ConsoleDisplay(80, 24, gs, rm, cts, mtx);
+        var testDisp = new ConsoleDisplay(100, 24, gs, rm, cts, mtx);
         var input = new KeyboardInput(gs, cts, mtx);
         input.TakeInput();
         await testDisp.Run();
