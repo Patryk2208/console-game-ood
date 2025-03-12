@@ -4,18 +4,41 @@ namespace Project_oob.Beings;
 
 public class Equipment
 {
-    private List<Item> _items = new();
-    
+    public List<Item> Eq { get; private set; } = new();
+    public List<IValuable> Sack { get; private set; } = new();
+    public int EqPointer { get; set; }
+    public int SackValue { get; private set; } = 0;
 
-    public void AddItem(Item item)
+    public void TryMovePointerLeft()
     {
-        _items.Add(item);
+        if (EqPointer > 0)
+        {
+            EqPointer--;
+        }
     }
-
-    public Item RemoveItem(int index)
+    
+    public void TryMovePointerRight()
     {
-        var Res = _items[index];
-        _items.RemoveAt(index);
-        return Res;
+        if (EqPointer < Eq.Count - 1)
+        {
+            EqPointer++;
+        }
+    }
+    
+    public void AddItemToEq(Item item)
+    {
+        Eq.Add(item);
+    }
+    public void AddItemToSack(IValuable item)
+    {
+        Sack.Add(item);
+        SackValue += item.Value;
+    }
+    public Item RemoveItemFromEq()
+    {
+        var res = Eq[EqPointer];
+        Eq.RemoveAt(EqPointer);
+        TryMovePointerLeft();
+        return res;
     }
 }

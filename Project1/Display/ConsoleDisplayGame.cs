@@ -2,7 +2,7 @@ using System.Text;
 
 namespace Project_oob.Display;
 
-public class ConsoleDisplayGame(int w, int h) : IDisplay
+/*public class ConsoleDisplayGame(int w, int h) : IDisplay
 {
     public void Display()
     {
@@ -22,9 +22,9 @@ public class ConsoleDisplayGame(int w, int h) : IDisplay
             //Console.SetCursorPosition(Width - 1, i);
             a.Append("|\n");
             /*Console.Write('|');
-            Console.WriteLine();*/
+            Console.WriteLine();#1#
         }
 
         //Console.Write(a.ToString());
     }
-}
+}*/

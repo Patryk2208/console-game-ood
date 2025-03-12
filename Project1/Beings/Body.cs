@@ -4,7 +4,7 @@ namespace Project_oob.Beings;
 
 public class Body
 {
-    protected Dictionary<string, BodyPart> BodyParts = new();
+    public Dictionary<string, BodyPart> BodyParts { get; protected set; } = new();
 
     public void AddBodyPart(BodyPart bp)
     {
@@ -14,12 +14,20 @@ public class Body
 
 public abstract class BodyPart
 {
-    public readonly string Name;
-    IUsable usedItem;
+    public string Name { get; protected init; }
+    public Item? usedItem { get; protected set; }
 
-    public void PutOn(IUsable item)
+    public bool IsUsed => usedItem != null;
+    public void PutOn(Item item)
     {
         usedItem = item;
+    }
+
+    public Item TakeOff()
+    {
+        var res = usedItem;
+        usedItem = null;
+        return res;
     }
 }
 
@@ -30,7 +38,6 @@ public class Hand : BodyPart
 
 public class LeftHand : Hand
 {
-    public new readonly string Name;
     public LeftHand()
     {
         Name = "LeftHand";
@@ -39,7 +46,6 @@ public class LeftHand : Hand
 
 public class RightHand : Hand
 {
-    public new readonly string Name;
     public RightHand()
     {
         Name = "RightHand";
