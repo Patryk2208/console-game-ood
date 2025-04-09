@@ -12,7 +12,8 @@ public class EnemyFactory (Random seed) : IBeingFactory
     private Random _seed { get; } = seed;
     private List<Func<IEnemy>> CreateFunctions { get; set; } = 
     [
-        () => new Orc()
+        () => new Orc(),
+        () => new Giant()
     ];
     public IBeing CreateBeing()
     {

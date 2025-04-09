@@ -43,8 +43,10 @@ public class RoomInstructionBuilder : IRoomBuilder
     public void PlaceWeapons(int maxItemsOfType)
     {
         var inst = """
-                   P - Place selected weapon in right hand/Move item from right hand back to Eq
-                   L - Place selected weapon in left hand/Move item from left hand back to Eq
+                   P - Place selected weapon in right hand / Move item from right hand back to Eq
+                   L - Place selected weapon in left hand / Move item from left hand back to Eq
+                   Enter - Use item in right hand
+                   Alt+Enter - Use item in left hand
                    Weapons are marked with small letters
                    """;
         if (!_instruction.Instructions.Contains(inst))
@@ -56,8 +58,10 @@ public class RoomInstructionBuilder : IRoomBuilder
     public void PlaceModifiedWeapons(int maxItemsOfType)
     {
         var inst = """
-                   P - Place selected weapon in right hand/Move item from right hand back to Eq
-                   L - Place selected weapon in left hand/Move item from left hand back to Eq
+                   P - Place selected weapon in right hand / Move item from right hand back to Eq
+                   L - Place selected weapon in left hand / Move item from left hand back to Eq
+                   Enter - Use item in right hand
+                   Alt+Enter - Use item in left hand
                    Weapons are marked with small letters
                    """;
         var inst2 = """
@@ -78,6 +82,7 @@ public class RoomInstructionBuilder : IRoomBuilder
     {
         var inst = """
                    Elixirs are marked with letter e
+                   All used elixir effects are shown
                    """;
         if (!_instruction.Instructions.Contains(inst))
         {

@@ -83,6 +83,7 @@ public class SinglePlayerGameState : GameState
     }
     
     //display
+    //todo move to display
     public void RunDisplay()
     {
         Task.Run(

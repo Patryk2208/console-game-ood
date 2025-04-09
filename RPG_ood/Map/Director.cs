@@ -56,9 +56,9 @@ public class PlayableMaze (IRoomBuilder builder) : IRoomDirector
             _builder.AddRandomPath();
         }
         _builder.PlaceItems(8);
-        _builder.PlaceWeapons(3);
+        _builder.PlaceWeapons(2);
         _builder.PlaceModifiedWeapons(7);
-        _builder.PlaceElixirs(5);
+        _builder.PlaceElixirs(7);
         _builder.PlaceEnemies(5);
     }
 }

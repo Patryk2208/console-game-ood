@@ -42,13 +42,13 @@ public abstract class Elixir : IElixir
     }
 }
 
-public class HealthElixir : Elixir
+public class HealingElixir : Elixir
 {
     private int BaseHealth { get; set; }
     private int Increment { get; set; }
-    public HealthElixir()
+    public HealingElixir()
     {
-        Name = "Health Elixir";
+        Name = "Healing Elixir";
         Color = AnsiConsoleColor.Cyan;
     }
     public override void Use(Player p, string bpName)
@@ -111,5 +111,77 @@ public class PowerElixir : Elixir
             state.Player.Attr["Power"].Value = BasePower + Increment;
         }
     }
-    
+}
+public class Poison : Elixir
+{
+    private int BaseHealth { get; set; }
+    private int Increment { get; set; }
+    public Poison()
+    {
+        Name = "Poison";
+        Color = AnsiConsoleColor.Green;
+    }
+    public override void Use(Player p, string bpName)
+    {
+        var used = p.Bd.BodyParts[bpName].TakeOff();
+        used.Pos = used.Pos with { X = -1, Y = -1 };
+        Increment = -1;
+        EffectDurationInMoments = 60;
+        MomentInterval = 2;
+        p.MomentChangedEvent.AddObserver(Name, this);
+    }
+
+    public override void Update(GameState? state)
+    {
+        ++MomentsPassed;
+        if(state == null) return;
+        if (MomentsPassed >= EffectDurationInMoments)
+        {
+            state.Player.MomentChangedEvent.RemoveObserver(Name, this);
+        }
+        else if (MomentsPassed % MomentInterval == 0)
+        {
+            state.Player.Attr["Health"].Value += Increment;
+        }
+    }
+}
+public class Antidote : Elixir
+{
+    private int BaseHealth { get; set; }
+    private int Increment { get; set; }
+    public Antidote()
+    {
+        Name = "Antidote";
+        Color = AnsiConsoleColor.BrightYellow;
+    }
+    public override void Use(Player p, string bpName)
+    {
+        var used = p.Bd.BodyParts[bpName].TakeOff();
+        used.Pos = used.Pos with { X = -1, Y = -1 };
+        p.MomentChangedEvent.RemoveObserversByName("Poison");
+    }
+
+    public override void Update(GameState? state) {}
+}
+
+public class HealthElixir : Elixir
+{
+    private int BaseHealth { get; set; }
+    private int Increment { get; set; }
+    public HealthElixir()
+    {
+        Name = "Health Elixir";
+        Color = AnsiConsoleColor.Cyan;
+    }
+    public override void Use(Player p, string bpName)
+    {
+        var used = p.Bd.BodyParts[bpName].TakeOff();
+        used.Pos = used.Pos with { X = -1, Y = -1 };
+        BaseHealth = p.Attr["Health"].Value;
+        Increment = 20;
+        p.Attr["Health"].Value = BaseHealth + Increment; 
+        p.MomentChangedEvent.AddObserver(Name, this);
+    }
+
+    public override void Update(GameState? state) {}
 }

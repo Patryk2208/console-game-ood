@@ -29,6 +29,9 @@ public class ElixirFactory (Random seed) : ItemFactory
     private List<Func<IElixir>> CreateFunctions { get; set; } = 
     [
         () => new PowerElixir(),
+        () => new HealingElixir(),
+        () => new Poison(),
+        () => new Antidote(),
         () => new HealthElixir()
     ];
     public IItem CreateItem()

@@ -112,3 +112,18 @@ public class Orc : Enemy
         return "O";
     }
 }
+
+public class Giant : Enemy
+{
+
+    public Giant()
+    {
+        Name = "Giant";
+        Color = AnsiConsoleColor.Blue;
+        MomentInterval = 15;
+    }
+    public override string ToString()
+    {
+        return "G";
+    }
+}

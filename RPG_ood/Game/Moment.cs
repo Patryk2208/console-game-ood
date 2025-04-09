@@ -14,6 +14,16 @@ public abstract class CustomEvent
         Observers.Remove((name, observer));
     }
 
+    public void RemoveObserversByName(string name)
+    {
+        foreach (var observer in Observers.ToList())
+        {
+            if (observer.Item1 == name)
+            {
+                Observers.Remove(observer);
+            }
+        }
+    }
     public void ClearObservers()
     {
         Observers.Clear();
