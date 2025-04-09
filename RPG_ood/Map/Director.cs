@@ -18,7 +18,7 @@ public class SimpleRaggedMaze(IRoomBuilder builder) : IRoomDirector
 
     public void Build()
     {
-        _builder.BuildFullRoom(35);
+        _builder.BuildFullRoom(AnsiConsoleColor.Green);
         _builder.AddCentralRoom(0.3f);
         var (s0, s1) = (0, 0);
         for (int i = 0; i < 30; i++)
@@ -43,7 +43,7 @@ public class PlayableMaze (IRoomBuilder builder) : IRoomDirector
 
     public void Build()
     {
-        _builder.BuildFullRoom(34);
+        _builder.BuildFullRoom(AnsiConsoleColor.Cyan);
         _builder.CarveMaze();
         _builder.AddCentralRoom(0.2f);
         for (int i = 0; i < 10; i++)
@@ -58,7 +58,7 @@ public class PlayableMaze (IRoomBuilder builder) : IRoomDirector
         _builder.PlaceItems(8);
         _builder.PlaceWeapons(3);
         _builder.PlaceModifiedWeapons(7);
-        _builder.PlaceElixirs(2);
+        _builder.PlaceElixirs(5);
         _builder.PlaceEnemies(5);
     }
 }
@@ -73,7 +73,7 @@ public class TestMaze (IRoomBuilder builder) : IRoomDirector
 
     public void Build()
     {
-        _builder.BuildFullRoom(31);
+        _builder.BuildFullRoom(AnsiConsoleColor.Blue);
         _builder.CarveMaze();
         _builder.PlaceEnemies(3);
         //_builder.PlaceModifiedWeapons(3);

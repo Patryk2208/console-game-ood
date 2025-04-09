@@ -9,7 +9,7 @@ namespace RPG_ood.Display;
 
 public static class ConsoleWriter
 {
-    public static void InsertText(ref ConsolePixel[,] consolePixels, Position pos, string text, int color = 37)
+    public static void InsertText(ref ConsolePixel[,] consolePixels, Position pos, string text, AnsiConsoleColor color = AnsiConsoleColor.White)
     {
         for (int i = 0; i < text.Length; i++)
         {
@@ -25,14 +25,14 @@ public static class ConsoleWriter
     }
 }
 
-public class ConsolePixel(int cc = 37, char c = (char)32)
+public class ConsolePixel(AnsiConsoleColor cc = AnsiConsoleColor.White, char c = (char)32)
 {
-    public int Color { get; set; } = cc;
-    public char Symbol { get; set; } = c;
+    private AnsiConsoleColor Color { get; set; } = cc;
+    private char Symbol { get; set; } = c;
 
     public override string ToString()
     {
-        return $"\x1B[{Color}m{Symbol}";
+        return $"\x1B[{(int)Color}m{Symbol}";
     }
 }
 
@@ -102,8 +102,8 @@ public class Display
     //general display section - refreshable between room changes
     public void DisplayFrame(GameState state)
     {
-        var horizontalFrame = new ConsolePixel(37, '_');
-        var verticalFrame = new ConsolePixel(37, '|');
+        var horizontalFrame = new ConsolePixel(AnsiConsoleColor.White, '_');
+        var verticalFrame = new ConsolePixel(AnsiConsoleColor.White, '|');
         _roomSPX = Height - state.CurrentRoom.Height - 2;
         for (int i = 0; i < Height; i++)
         {
@@ -169,8 +169,18 @@ public class Display
         {
             coursor = coursor with { X = coursor.X + 1 };
             ConsoleWriter.InsertText(ref _gameBoard, coursor, it.PrintName(),
-                counter == state.Player.Eq.EqPointer ? 33 : 37);
+                counter == state.Player.Eq.EqPointer ? AnsiConsoleColor.Yellow : AnsiConsoleColor.White);
             ++counter;
+        }
+        
+        
+        //todo better elixir effects display
+        coursor = coursor with { X = coursor.X = _roomSPX / 2, Y = state.CurrentRoom.Width + 50 };
+        ConsoleWriter.InsertText(ref _gameBoard, coursor, $"Applied Effects:");
+        foreach (var effectName in state.Player.MomentChangedEvent.Names)
+        {
+            coursor = coursor with { X = coursor.X + 1 };
+            ConsoleWriter.InsertText(ref _gameBoard, coursor, $"{effectName}");
         }
     }
 
@@ -181,7 +191,7 @@ public class Display
         {
             for (int j = 1, jEl = 0; j < 1 + room.Width; j++, jEl++)
             {
-                GameBoard[i, j] = new ConsolePixel(room.Elements[iEl, jEl].color,
+                GameBoard[i, j] = new ConsolePixel(room.Elements[iEl, jEl].Color,
                     room.Elements[iEl, jEl].ToString()[0]);
             }
         }
@@ -225,7 +235,7 @@ public class Display
         {
             coursor = coursor with { X = coursor.X + 1 };
             ConsoleWriter.InsertText(ref _gameBoard, coursor, item.PrintName(),
-                counter == state.CurrentRoom.PickUpCursor ? 33 : 37);
+                counter == state.CurrentRoom.PickUpCursor ? AnsiConsoleColor.Yellow : AnsiConsoleColor.White);
             ++counter;
         }
     }

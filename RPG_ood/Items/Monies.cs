@@ -5,24 +5,27 @@ namespace RPG_ood.Items;
 
 public interface IMoney : IItem, IValuable
 {
-    public int Value { get; set; }
     string IItem.PrintName() => $"{Name} [{Value}]";
 }
 
-public class Coin : IMoney
+public abstract class Money : IMoney
 {
     public string Name { get; set; }
-    public int Color { get; set; }
+    public AnsiConsoleColor Color { get; set; } = AnsiConsoleColor.BrightYellow;
+    public abstract void Interact(Player p);
     public Position Pos { get; set; }
     public int Value { get; set; }
+}
+
+public class Coin : Money
+{
     public Coin()
     {
         Name = "Coin";
-        Color = 93;
         Value = 2;
     }
 
-    public void Interact(Player p)
+    public override void Interact(Player p)
     {
         p.Eq.CoinCount++;
         p.Eq.AddItemToSack(this);
@@ -34,20 +37,15 @@ public class Coin : IMoney
     }
 }
 
-public class Gold : IMoney
+public class Gold : Money
 {
-    public string Name { get; set; }
-    public int Color { get; set; }
-    public Position Pos { get; set; }
-    public int Value { get; set; }
     public Gold()
     {
         Name = "Gold";
-        Color = 33;
         Value = 5;
     }
 
-    public void Interact(Player p)
+    public override void Interact(Player p)
     {
         p.Eq.GoldCount++;
         p.Eq.AddItemToSack(this);

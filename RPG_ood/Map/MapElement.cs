@@ -3,7 +3,7 @@ namespace RPG_ood.Map;
 public abstract class MapElement
 {
     public abstract bool OnStandable { get; set; }
-    public int color { get; set; }
+    public AnsiConsoleColor Color { get; init; }
     public abstract override string ToString();
 }
 
@@ -18,7 +18,7 @@ public class BlankMapElement : MapElement
 
 public class Wall : MapElement
 {
-    public Wall(int color) => this.color = color;
+    public Wall(AnsiConsoleColor color) => this.Color = color;
     public override bool OnStandable { get; set; } = false;
 
     public override string ToString()

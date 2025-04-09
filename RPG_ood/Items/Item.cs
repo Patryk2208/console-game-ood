@@ -7,7 +7,7 @@ namespace RPG_ood.Items;
 public interface IItem : IMappable
 {
     public string Name { get; set; }
-    public int Color { get; set; }
+    public AnsiConsoleColor Color { get; set; }
     public void Interact(Player p);
     public string PrintName();
 }
@@ -25,5 +25,6 @@ public interface IPickupable : IItem
 
 public interface IUsable : IPickupable
 {
+    public void Use(Player p, string bpName);
     public void AssignAttributes(Dictionary<string, int> attributes);
 }

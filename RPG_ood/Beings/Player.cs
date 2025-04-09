@@ -2,6 +2,7 @@ using System.Text;
 using Attribute = RPG_ood.Attributes.Attribute;
 using RPG_ood.Map;
 using RPG_ood.Attributes;
+using RPG_ood.Game;
 using RPG_ood.Items;
 using Attributes_Attribute = RPG_ood.Attributes.Attribute;
 
@@ -13,17 +14,19 @@ public class Player : IBeing
 {
     public string Name { get; init; }
     public Position Pos { get; set; }
-    public int Color { get; init; }
+    public AnsiConsoleColor Color { get; init; }
+    public MomentChangedEvent MomentChangedEvent { get; init; }
     public Body Bd { get; }
     public Dictionary<string, Attributes_Attribute> Attr { get; protected set; }
     public Equipment Eq { get; protected set; }
-    
+
     public Player(string name)
     {
         Name = name;
-        Color = 35;
+        Color = AnsiConsoleColor.Magenta;
         Pos = new Position(0, 0);
-        
+        MomentChangedEvent = new MomentChangedEvent();
+
         Attr = new Dictionary<string, Attributes_Attribute>();
         var p = new Power();
         var a = new Agility();
@@ -37,15 +40,21 @@ public class Player : IBeing
         Attr.Add(l.Name, l);
         Attr.Add(ag.Name, ag);
         Attr.Add(w.Name, w);
-            
+
         Eq = new Equipment();
-        
+
         Bd = new Body();
         Bd.AddBodyPart(new LeftHand());
         Bd.AddBodyPart(new RightHand());
-
     }
-
+    void IObserver.Update(GameState? state)
+    {
+        MomentChangedEvent.NotifyObservers(state);
+    }
+    public void UseItemInHand(IUsable item, string bpName)
+    {
+        item.Use(this, bpName);
+    }
     public void PickUpItem(IItem item)
     {
         item.Interact(this);
@@ -60,7 +69,6 @@ public class Player : IBeing
         }
         
     }
-
     public void TryTakeOffItem(BodyPart b)
     {
         var item = b.usedItem!;
@@ -92,6 +100,50 @@ public class Player : IBeing
             it.AssignAttributes(res);
         }
         return res;
+    }
+    
+    public void MoveUp(Room room)
+    {
+        if (Pos.X - 1 >= 0 && room.Elements[Pos.X - 1, Pos.Y].OnStandable)
+        {
+            room.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = Pos.X - 1, Y = Pos.Y };
+            room.Elements[Pos.X, Pos.Y].OnStandable = false;
+            //newMessage = $"{P.Name} Moved Up";
+        }
+    }
+    
+    public void MoveDown(Room room)
+    {
+        if (Pos.X + 1 < room.Height && room.Elements[Pos.X + 1, Pos.Y].OnStandable)
+        {
+            room.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = Pos.X + 1, Y = Pos.Y };
+            room.Elements[Pos.X, Pos.Y].OnStandable = false;
+            //newMessage = $"{P.Name} Moved Up";
+        }
+    }
+    
+    public void MoveLeft(Room room)
+    {
+        if (Pos.Y - 1 >= 0 && room.Elements[Pos.X, Pos.Y - 1].OnStandable)
+        {
+            room.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = Pos.X, Y = Pos.Y - 1 };
+            room.Elements[Pos.X, Pos.Y].OnStandable = false;
+            //newMessage = $"{P.Name} Moved Up";
+        }
+    }
+    
+    public void MoveRight(Room room)
+    {
+        if (Pos.Y + 1 < room.Width && room.Elements[Pos.X, Pos.Y + 1].OnStandable)
+        {
+            room.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = Pos.X, Y = Pos.Y + 1 };
+            room.Elements[Pos.X, Pos.Y].OnStandable = false;
+            //newMessage = $"{P.Name} Moved Up";
+        }
     }
     public override string ToString()
     {

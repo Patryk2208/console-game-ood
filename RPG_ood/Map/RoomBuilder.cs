@@ -7,10 +7,10 @@ using RPG_ood.Items;
 namespace RPG_ood.Map;
 
 
-public interface IRoomBuilder : IMapBuilder
+public interface IRoomBuilder
 {
     public void BuildEmptyRoom();
-    public void BuildFullRoom(int color);
+    public void BuildFullRoom(AnsiConsoleColor color);
     public void CarveMaze();
     public (int, int) AddRandomPath(int s0 = -1, int s1 = -1);
     public void AddRandomChamber(int size);
@@ -85,7 +85,7 @@ public class RoomBuilder(string roomName, int width, int height) : IRoomBuilder
         }
     }
 
-    public void BuildFullRoom(int color)
+    public void BuildFullRoom(AnsiConsoleColor color)
     {
         for (int i = 0; i < _room.Height; i++)
         {

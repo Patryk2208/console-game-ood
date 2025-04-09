@@ -13,9 +13,10 @@ class Program
     {
         var cts = new CancellationTokenSource();
         var mtx = new Mutex();
-        var gs = new SinglePlayerGameState("Player One", mtx, cts);
-        var input = new Input.Input(gs, mtx, cts); 
+        var input = new Input.Input(mtx, cts); 
+        var gs = new SinglePlayerGameState("Player One", mtx, cts, input);
         input.TakeInput();
-        await gs.RunDisplay();
+        gs.RunDisplay();
+        gs.RunGame();
     }
 }

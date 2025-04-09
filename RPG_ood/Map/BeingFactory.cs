@@ -10,22 +10,12 @@ public interface IBeingFactory
 public class EnemyFactory (Random seed) : IBeingFactory
 {
     private Random _seed { get; } = seed;
+    private List<Func<IEnemy>> CreateFunctions { get; set; } = 
+    [
+        () => new Orc()
+    ];
     public IBeing CreateBeing()
     {
-        IEnemy enemy;
-        switch (_seed.Next(1))
-        {
-            case 0:
-            {
-                enemy = CreateOrc();
-                break;
-            }
-            default:
-            {
-                throw new Exception("Random.Next() error.");
-            }
-        }
-        return enemy;
+        return CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
     }
-    private Orc CreateOrc() => new Orc();
 }

@@ -7,7 +7,7 @@ public abstract class WeaponDecorator : IWeapon
 {
     public abstract string Name { get; set; }
     public abstract int Damage { get; set; }
-    public new IWeapon Decorated { get; set; }
+    protected IWeapon Decorated { get; set; }
     protected WeaponDecorator(IWeapon item)
     {
         Decorated = item;
@@ -17,9 +17,9 @@ public abstract class WeaponDecorator : IWeapon
         get => Decorated.Pos;
         set => Decorated.Pos = value;
     }
-    public int Color
+    public AnsiConsoleColor Color
     {
-        get => Decorated.Color;
+        get => AnsiConsoleColor.BrightRed;
         set => Decorated.Color = value;
     }
     public bool IsTwoHanded
@@ -27,6 +27,9 @@ public abstract class WeaponDecorator : IWeapon
         get => Decorated.IsTwoHanded;
         set => Decorated.IsTwoHanded = value;
     }
+
+    public void Use(Player p, string bpName) {}
+
     public abstract void AssignAttributes(Dictionary<string, int> attributes);
     public override string ToString()
     {

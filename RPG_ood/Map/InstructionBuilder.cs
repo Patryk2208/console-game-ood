@@ -10,7 +10,7 @@ public class RoomInstructionBuilder : IRoomBuilder
     private Instruction _instruction { get; set; } = new Instruction();
     public void BuildEmptyRoom() {}
 
-    public void BuildFullRoom(int color) {}
+    public void BuildFullRoom(AnsiConsoleColor color) {}
 
     public void CarveMaze() {}
 

@@ -6,187 +6,78 @@ namespace RPG_ood.Map;
 public interface ItemFactory
 {
     public IItem CreateItem();
+    
 }
-
 public class MoneyFactory (Random seed): ItemFactory
 {
     private Random _seed { get; } = seed;
+    private List<Func<IMoney>> CreateFunctions { get; set; } = 
+    [
+        () => new Coin(),
+        () => new Gold()
+    ];
+    
     public IItem CreateItem()
     {
-        IMoney item;
-        switch (_seed.Next(2))
-        {
-            case 0:
-            {
-                item = CreateCoin();
-                break;
-            }
-            case 1:
-            {
-                item = CreateGold();
-                break;
-            }
-            default:
-            {
-                throw new Exception("Random.Next() error.");
-            }
-        }
-        return item;
+        return CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
     }
-    private Gold CreateGold() => new Gold();
-    private Coin CreateCoin() => new Coin();
 }
 
 public class ElixirFactory (Random seed) : ItemFactory
 {
     private Random _seed { get; } = seed;
+    private List<Func<IElixir>> CreateFunctions { get; set; } = 
+    [
+        () => new PowerElixir(),
+        () => new HealthElixir()
+    ];
     public IItem CreateItem()
     {
-        IElixir item;
-        switch (_seed.Next(1))
-        {
-            case 0:
-            {
-                item = CreateHealthElixir();
-                break;
-            }
-            default:
-            {
-                throw new Exception("Random.Next() error.");
-            }
-        }
-        return item;
+        return CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
     }
-    private HealthElixir CreateHealthElixir() => new HealthElixir();
 }
 
 public class MineralFactory (Random seed): ItemFactory
 {
     private Random _seed { get; } = seed;
+    private List<Func<IMineral>> CreateFunctions { get; set; } = 
+    [
+        () => new Sand(),
+        () => new Wood(),
+        () => new Water()
+    ];
     public IItem CreateItem()
     {
-        IMineral item;
-        switch (_seed.Next(3))
-        {
-            case 0:
-            {
-                item = CreateSand();
-                break;
-            }
-            case 1:
-            {
-                item = CreateWood();
-                break;
-            }
-            case 2:
-            {
-                item = CreateWater();
-                break;
-            }
-            default:
-            {
-                throw new Exception("Random.Next() error.");
-            }
-        }
-        return item;
+        return CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
     }
-    private Sand CreateSand() => new Sand();
-    private Wood CreateWood() => new Wood();
-    private Water CreateWater() => new Water();
 }
 
 public class WeaponFactory (Random seed, bool modified): ItemFactory
 {
     private Random _seed { get; } = seed;
     private bool _modified { get; } = modified;
+    private List<Func<IWeapon>> CreateFunctions { get; set; } = 
+    [
+        () => new Sword(),
+        () => new Knife(),
+        () => new Shield(),
+        () => new BigSword()
+    ];
+
+    private List<Func<IWeapon, IWeapon>> ModifyWeapons { get; set; } =
+    [
+        weapon => new StrongWeapon(weapon),
+        weapon => new LuckyWeapon(weapon),
+        weapon => new DefensiveWeapon(weapon),
+        weapon => new OffensiveWeapon(weapon),
+        weapon => new HeavyWeapon(weapon),
+        weapon => new LightWeapon(weapon)
+    ];
     public IItem CreateItem()
     {
-        IWeapon item;
-        switch (_seed.Next(4))
-        {
-            case 0:
-            {
-                item = CreateSword();
-                break;
-            }
-            case 1:
-            {
-                item = CreateKnife();
-                break;
-            }
-            case 2:
-            {
-                item = CreateShield();
-                break;
-            }
-            case 3:
-            {
-                item = CreateBigSword();
-                break;
-            }
-            default:
-            {
-                throw new Exception("Random.Next() error.");
-            }
-        }
-
-        if (_modified)
-        {
-            int noMods = _seed.Next(1, 3);
-            for (int i = 0; i < noMods; i++)
-            {
-                switch (_seed.Next(6))
-                {
-                    case 0:
-                    {
-                        item = AddStrongEffect(item);
-                        break;
-                    }
-                    case 1:
-                    {
-                        item = AddLuckyEffect(item);
-                        break;
-                    }
-                    case 2:
-                    {
-                        item = AddDefensiveEffect(item);
-                        break;
-                    }
-                    case 3:
-                    {
-                        item = AddOffensiveEffect(item);
-                        break;
-                    }
-                    case 4:
-                    {
-                        item = AddHeavyEffect(item);
-                        break;
-                    }
-                    case 5:
-                    {
-                        item = AddLightEffect(item);
-                        break;
-                    }
-                    default:
-                    {
-                        throw new Exception("Random.Next() error.");
-                    }
-                }
-            }
-        }
+        var item = CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
+        if(_modified) item = ModifyWeapons[_seed.Next(ModifyWeapons.Count)].Invoke(item);
         return item;
     }
-    private Sword CreateSword() => new Sword();
-    private Knife CreateKnife() => new Knife();
-    private Shield CreateShield() => new Shield();
-    private BigSword CreateBigSword() => new BigSword();
-    
-    //effects
-    private IWeapon AddStrongEffect(IWeapon weapon) => new StrongWeapon(weapon);
-    private IWeapon AddLuckyEffect(IWeapon weapon) => new LuckyWeapon(weapon);
-    private IWeapon AddDefensiveEffect(IWeapon weapon) => new DefensiveWeapon(weapon);
-    private IWeapon AddOffensiveEffect(IWeapon weapon) => new OffensiveWeapon(weapon);
-    private IWeapon AddHeavyEffect(IWeapon weapon) => new HeavyWeapon(weapon);
-    private IWeapon AddLightEffect(IWeapon weapon) => new LightWeapon(weapon);
 
 }

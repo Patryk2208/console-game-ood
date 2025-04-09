@@ -7,17 +7,14 @@ namespace RPG_ood.Input;
 
 public class Input
 {
-    public GameState Game { get; set; }
-    public Player P { get; set; }
-    public Logs Logs { get; set; } = new Logs();
-    protected CancellationTokenSource _cts;
-    protected Mutex _mutex;
-    public Input(GameState game, Mutex mutex, CancellationTokenSource cancellationTokenSource)
+    public ConsoleInputHandlerLink ChainOfResponsibilityHandler { private get; set; }
+    private CancellationTokenSource _cts;
+    private Mutex _mutex;
+    public Input(Mutex mutex, CancellationTokenSource cancellationTokenSource)
     {
-        Game = game;
-        P = game.Player;
         _cts = cancellationTokenSource;
         _mutex = mutex;
+        ChainOfResponsibilityHandler = null!;
     }
     
     public void TakeInput()
@@ -29,7 +26,7 @@ public class Input
                 {
                     var key = Console.ReadKey(true);
                     _mutex.WaitOne();
-                    ParseInput(key);
+                    ChainOfResponsibilityHandler.HandleInput(key);
                     _mutex.ReleaseMutex();
                 }
             }, _cts.Token);
@@ -37,7 +34,7 @@ public class Input
 
     private void ParseInput(ConsoleKeyInfo key)
     {
-        string? newMessage = null;
+        /*string? newMessage = null;
         bool canMove;
         switch (key.Key)
         {
@@ -214,6 +211,6 @@ public class Input
             Logs.AddLogMessage(newMessage!);
             var logDisp = Display.Display.GetInstance();
             logDisp.DisplayLog(Logs);
-        }
+        }*/
     }
 }

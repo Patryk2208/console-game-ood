@@ -35,10 +35,11 @@ public abstract class Weapon : IWeapon
 {
     public string Name { get; set; }
     public Position Pos { get; set; }
-    public int Color { get; set; }
+    public AnsiConsoleColor Color { get; set; } = AnsiConsoleColor.Blue;
     public int Damage { get; set; }
     public bool IsTwoHanded { get; set; }
     public void AssignAttributes(Dictionary<string, int> attributes) {}
+    public void Use(Player p, string bpName) {}
 }
 
 public class Sword : Weapon
@@ -46,7 +47,6 @@ public class Sword : Weapon
     public Sword()
     {
         Name = "Sword";
-        Color = 37;
         Damage = 100;
         IsTwoHanded = false;
     }
@@ -62,7 +62,6 @@ public class Knife : Weapon
     public Knife()
     {
         Name = "Knife";
-        Color = 37;
         Damage = 50;
         IsTwoHanded = false;
     }
@@ -78,7 +77,6 @@ public class BigSword : Weapon
     public BigSword()
     {
         Name = "Big Sword";
-        Color = 37;
         Damage = 150;
         IsTwoHanded = true;
     }
@@ -93,7 +91,6 @@ public class Shield : Weapon
     public Shield()
     {
         Name = "Shield";
-        Color = 31;
         Damage = 100;
         IsTwoHanded = false;
     }

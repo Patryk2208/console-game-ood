@@ -18,7 +18,7 @@ public abstract class Mineral : IMineral
 {
     public Position Pos { get; set; }
     public string Name { get; set; }
-    public int Color { get; set; }
+    public AnsiConsoleColor Color { get; set; }
     public int Quantity { get; set; }
 }
 

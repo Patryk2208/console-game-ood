@@ -3,7 +3,7 @@ namespace RPG_ood.Attributes;
 public abstract class Attribute
 {
     public string Name { get; protected init; }
-    public int Value { get; protected set; }
+    public int Value { get; set; }
     public static int MaxValue { get; protected set; }
 
     public void SetValue(int value)
