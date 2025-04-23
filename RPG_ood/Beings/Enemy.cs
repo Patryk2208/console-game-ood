@@ -20,6 +20,7 @@ public abstract class Enemy : IEnemy
     public Position Pos { get; set; }
     public string Name { get; init; }
     public bool IsDead { get; set; }
+    public bool WasAttacked { get; set; }
     public AnsiConsoleColor Color { get; init; }
     public MomentChangedEvent MomentChangedEvent { get; init; }
     private int MomentPassed { get; set; } = 0;
@@ -51,6 +52,7 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = -1, Y = -1 };
             return;
         }
+        WasAttacked = false;
         if (MomentPassed % MomentInterval == 0)
         {
             Wander(state!.CurrentRoom);
@@ -148,7 +150,7 @@ public class Giant : Enemy
         MomentInterval = 15;
         Health = 200;
         Armor = 50;
-        Damage = 20;
+        Damage = 60;
     }
     public override string ToString()
     {

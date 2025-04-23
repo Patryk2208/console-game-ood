@@ -19,11 +19,13 @@ public abstract class PlayerEnemyFight(Player attacker, IEnemy defender)
     public void Attack()
     {
         Defender.ReceiveDamage(AttackDamage);
+        Defender.WasAttacked = true;
     }
 
     public void CounterAttack()
     {
         Attacker.ReceiveDamage(CounterAttackDamage);
+        Attacker.WasAttacked = true;
     }
 }
 

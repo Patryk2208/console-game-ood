@@ -14,6 +14,7 @@ public class Player : IBeing
 {
     public string Name { get; init; }
     public bool IsDead { get; set; }
+    public bool WasAttacked { get; set; }
     public Position Pos { get; set; }
     public AnsiConsoleColor Color { get; init; }
     public MomentChangedEvent MomentChangedEvent { get; init; }
@@ -58,6 +59,7 @@ public class Player : IBeing
             Pos = Pos with { X = -1, Y = -1 };
             return;
         }
+        WasAttacked = false;
         MomentChangedEvent.NotifyObservers(state);
     }
     public void UseItemInHand(IUsable item, string bpName)

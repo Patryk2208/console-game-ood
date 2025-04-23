@@ -7,6 +7,7 @@ public interface IBeing : IMappable, IObserver
 {
     public string Name { get; protected init; }
     public bool IsDead { get; protected set; }
+    public bool WasAttacked { get; set; }
     public AnsiConsoleColor Color { get; protected init; }
     protected MomentChangedEvent MomentChangedEvent { get; init; } 
     public void ReceiveDamage(int damage);

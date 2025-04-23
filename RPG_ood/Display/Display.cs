@@ -25,13 +25,18 @@ public static class ConsoleWriter
     }
 }
 
-public class ConsolePixel(AnsiConsoleColor cc = AnsiConsoleColor.White, char c = (char)32)
+public class ConsolePixel(AnsiConsoleColor cc = AnsiConsoleColor.White, char c = (char)32, AnsiConsoleColor? bgColor = null)
 {
-    private AnsiConsoleColor Color { get; set; } = cc;
+    private AnsiConsoleColor Color { get; init; } = cc;
+    private AnsiConsoleColor? BgColor { get; init; } = bgColor;
     private char Symbol { get; set; } = c;
 
     public override string ToString()
     {
+        if (BgColor.HasValue)
+        {
+            return $"\x1B[{(int)BgColor}m\x1B[{(int)Color}m{Symbol}";
+        }
         return $"\x1B[{(int)Color}m{Symbol}";
     }
 }
@@ -216,7 +221,7 @@ public class Display
             if (being.Pos.IsSet())
             {
                 GameBoard[_roomSPX + 1 + being.Pos.X, 1 + being.Pos.Y] =
-                    new ConsolePixel(being.Color, being.ToString()[0]);
+                    new ConsolePixel(being.Color, being.ToString()[0], being.WasAttacked ? AnsiConsoleColor.BgRed : null);
             }
         }
     }
@@ -226,7 +231,7 @@ public class Display
         if (p.Pos.IsSet())
         {
             GameBoard[_roomSPX + 1 + p.Pos.X, 1 + p.Pos.Y] =
-                new ConsolePixel(p.Color, p.ToString()[0]);
+                new ConsolePixel(p.Color, p.ToString()[0], p.WasAttacked ? AnsiConsoleColor.BgRed : null);
             return true;
         }
         var coursor = new Position(Height / 2, Width / 2);
