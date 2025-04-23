@@ -13,6 +13,7 @@ namespace RPG_ood.Beings;
 public class Player : IBeing
 {
     public string Name { get; init; }
+    public bool IsDead { get; set; }
     public Position Pos { get; set; }
     public AnsiConsoleColor Color { get; init; }
     public MomentChangedEvent MomentChangedEvent { get; init; }
@@ -49,6 +50,14 @@ public class Player : IBeing
     }
     void IObserver.Update(GameState? state)
     {
+        if (state == null) return;
+        if (IsDead)
+        {
+            state.MomentChangedEvent.RemoveObserver(Name, this);
+            state.CurrentRoom.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = -1, Y = -1 };
+            return;
+        }
         MomentChangedEvent.NotifyObservers(state);
     }
     public void UseItemInHand(IUsable item, string bpName)
@@ -120,7 +129,7 @@ public class Player : IBeing
             room.Elements[Pos.X, Pos.Y].OnStandable = true;
             Pos = Pos with { X = Pos.X + 1, Y = Pos.Y };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
-            //newMessage = $"{P.Name} Moved Up";
+            //newMessage = $"{P.Name} Moved Down";
         }
     }
     
@@ -131,7 +140,7 @@ public class Player : IBeing
             room.Elements[Pos.X, Pos.Y].OnStandable = true;
             Pos = Pos with { X = Pos.X, Y = Pos.Y - 1 };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
-            //newMessage = $"{P.Name} Moved Up";
+            //newMessage = $"{P.Name} Moved Left";
         }
     }
     
@@ -142,9 +151,27 @@ public class Player : IBeing
             room.Elements[Pos.X, Pos.Y].OnStandable = true;
             Pos = Pos with { X = Pos.X, Y = Pos.Y + 1 };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
-            //newMessage = $"{P.Name} Moved Up";
+            //newMessage = $"{P.Name} Moved Right";
         }
     }
+    public void ReceiveDamage(int damage)
+    {
+        Attr["Health"].Value -= damage;
+        if (Attr["Health"].Value <= 0)
+        {
+            Die();
+        }
+    }
+    public void Die()
+    {
+        IsDead = true;
+    }
+
+    public IEnemy? CanFight()
+    {
+        return null;
+    }
+
     public override string ToString()
     {
         return "¶";

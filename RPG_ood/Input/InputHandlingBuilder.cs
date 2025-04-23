@@ -85,6 +85,18 @@ public class InputHandlingBuilder(GameState state, Logs logs) : IRoomBuilder
         var useRight = new UseFromRightHandLink(_gameState, _logs);
         if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
         if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
+        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
+        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
+        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
+        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
+        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
+        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
+        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
+        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
+        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
+        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
+        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
+        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
     }
     public void PlaceModifiedWeapons(int maxItemsOfType)
     {
@@ -110,6 +122,18 @@ public class InputHandlingBuilder(GameState state, Logs logs) : IRoomBuilder
         var useRight = new UseFromRightHandLink(_gameState, _logs);
         if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
         if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
+        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
+        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
+        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
+        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
+        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
+        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
+        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
+        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
+        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
+        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
+        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
+        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
     }
     public void PlaceElixirs(int maxItemsOfType)
     {
@@ -131,6 +155,18 @@ public class InputHandlingBuilder(GameState state, Logs logs) : IRoomBuilder
         var useRight = new UseFromRightHandLink(_gameState, _logs);
         if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
         if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
+        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
+        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
+        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
+        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
+        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
+        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
+        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
+        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
+        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
+        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
+        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
+        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
     }
     public void PlacePlayer(Player player) {}
     public void PlaceEnemies(int maxItemsOfType) {}

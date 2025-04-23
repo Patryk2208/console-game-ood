@@ -1,4 +1,5 @@
 using System.Xml;
+using RPG_ood.Attack;
 using RPG_ood.Beings;
 using RPG_ood.Effects;
 using RPG_ood.Game;
@@ -12,6 +13,7 @@ public interface IElixir : IUsable, IPickupable, IItem, IObserver
 
 public abstract class Elixir : IElixir
 {
+    public int Damage { get; set; } = 0;
     public Position Pos { get; set; }
     public string Name { get; set; }
     public AnsiConsoleColor Color { get; set; }
@@ -35,6 +37,10 @@ public abstract class Elixir : IElixir
     public abstract void Use(Player p, string bpName);
     public void AssignAttributes(Dictionary<string, int> attributes) {}
     public abstract void Update(GameState? state);
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    {
+        playerEnemyFight.VisitOtherUsable(this, original ?? this);
+    }
 
     public override string ToString()
     {
@@ -71,7 +77,7 @@ public class HealingElixir : Elixir
         }
         else if (MomentsPassed % MomentInterval == 0)
         {
-            state.Player.Attr["Health"].Value += Increment;
+            state.Player.ReceiveDamage(-Increment);
         }
     }
 }
@@ -141,7 +147,7 @@ public class Poison : Elixir
         }
         else if (MomentsPassed % MomentInterval == 0)
         {
-            state.Player.Attr["Health"].Value += Increment;
+            state.Player.ReceiveDamage(-Increment);
         }
     }
 }
@@ -179,7 +185,7 @@ public class HealthElixir : Elixir
         used.Pos = used.Pos with { X = -1, Y = -1 };
         BaseHealth = p.Attr["Health"].Value;
         Increment = 20;
-        p.Attr["Health"].Value = BaseHealth + Increment; 
+        p.ReceiveDamage(-(BaseHealth + Increment));
         p.MomentChangedEvent.AddObserver(Name, this);
     }
 

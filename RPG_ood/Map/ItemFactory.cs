@@ -73,8 +73,8 @@ public class WeaponFactory (Random seed, bool modified): ItemFactory
         weapon => new LuckyWeapon(weapon),
         weapon => new DefensiveWeapon(weapon),
         weapon => new OffensiveWeapon(weapon),
-        weapon => new HeavyWeapon(weapon),
-        weapon => new LightWeapon(weapon)
+        weapon => new SlowWeapon(weapon),
+        weapon => new FastWeapon(weapon)
     ];
     public IItem CreateItem()
     {

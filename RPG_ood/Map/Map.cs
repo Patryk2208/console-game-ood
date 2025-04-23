@@ -42,7 +42,7 @@ public class Room(string name, int width, int height)
     public int PickUpCursor { get; set; } = 0;
     public IEnumerable<IItem> GetItemsAtPos(Position pos)
     {
-        var res = Items.Where(i => i.Pos.Equals(pos)).ToArray();
+        var res = Items.Where(i => i.Pos.IsSet() && i.Pos.Equals(pos)).ToArray();
         var count = res.Length;
         if (count > 0 && count - 1 < PickUpCursor)
         {
@@ -53,7 +53,7 @@ public class Room(string name, int width, int height)
 
     public IEnumerable<IBeing> GetBeingsNearby(Position pos, float radius)
     {
-        return Beings.Where(b => Math.Pow(b.Pos.X - pos.X, 2) + Math.Pow(b.Pos.Y - pos.Y, 2) < radius);
+        return Beings.Where(b => b.Pos.IsSet() && Math.Pow(b.Pos.X - pos.X, 2) + Math.Pow(b.Pos.Y - pos.Y, 2) < radius);
     }
 
         /*for (int i = 0; i < height; i++)

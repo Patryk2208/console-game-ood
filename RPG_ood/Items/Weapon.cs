@@ -1,3 +1,4 @@
+using RPG_ood.Attack;
 using RPG_ood.Effects;
 using RPG_ood.Beings;
 
@@ -5,7 +6,6 @@ namespace RPG_ood.Items;
 
 public interface IWeapon : IItem, IUsable, IPickupable
 {
-    public int Damage { get; set; }
     public bool IsTwoHanded { get; set; }
     void IItem.Interact(Player p)
     {
@@ -40,9 +40,34 @@ public abstract class Weapon : IWeapon
     public bool IsTwoHanded { get; set; }
     public void AssignAttributes(Dictionary<string, int> attributes) {}
     public void Use(Player p, string bpName) {}
+    public abstract void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original);
 }
 
-public class Sword : Weapon
+public abstract class HeavyWeapon : Weapon
+{
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    {
+        playerEnemyFight.VisitHeavyWeapon(this, original ?? this);
+    }
+}
+
+public abstract class LightWeapon : Weapon
+{
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    {
+        playerEnemyFight.VisitLightWeapon(this, original ?? this);
+}
+}
+
+public abstract class MagicalWeapon : Weapon
+{
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    {
+        playerEnemyFight.VisitMagicalWeapon(this, original ?? this);
+    }
+}
+
+public class Sword : HeavyWeapon
 {
     public Sword()
     {
@@ -57,7 +82,7 @@ public class Sword : Weapon
     }
 }
 
-public class Knife : Weapon
+public class Knife : LightWeapon
 {
     public Knife()
     {
@@ -72,7 +97,7 @@ public class Knife : Weapon
     }
 }
 
-public class BigSword : Weapon
+public class BigSword : HeavyWeapon
 {
     public BigSword()
     {
@@ -86,7 +111,7 @@ public class BigSword : Weapon
     }
 }
 
-public class Shield : Weapon
+public class Shield : HeavyWeapon
 {
     public Shield()
     {

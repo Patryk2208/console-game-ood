@@ -1,3 +1,4 @@
+using RPG_ood.Attack;
 using RPG_ood.Game;
 using RPG_ood.Beings;
 
@@ -27,7 +28,7 @@ public class MoveUpLink(GameState state,  Logs logs)
     }
 }
 
-public class MoveDownLink(GameState state, Logs logs) 
+public class MoveDownLink(GameState state, Logs logs)
     : ConsoleInputHandlerLink(state, logs)
 {
     public override void HandleInput(ConsoleKeyInfo keyInfo)
@@ -282,7 +283,7 @@ public class UseFromLeftHandLink(GameState state, Logs logs)
 {
     public override void HandleInput(ConsoleKeyInfo keyInfo)
     {
-        if (keyInfo.Key == ConsoleKey.Enter && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
+        if (keyInfo.Key == ConsoleKey.U && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
         {
             string newMessage;
             if (!State.Player.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
@@ -312,7 +313,7 @@ public class UseFromRightHandLink(GameState state, Logs logs)
 {
     public override void HandleInput(ConsoleKeyInfo keyInfo)
     {
-        if (keyInfo.Key == ConsoleKey.Enter && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Shift) == 0)
+        if (keyInfo.Key == ConsoleKey.U && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
         {
             string newMessage;
             if (!State.Player.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
@@ -324,6 +325,253 @@ public class UseFromRightHandLink(GameState state, Logs logs)
             else
             {
                 newMessage = "Invalid Input: No item in RightHand";
+            }
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class NormalAttackRightHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Enter && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Normal Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var normalAttack = new NormalPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(normalAttack, null);
+                    normalAttack.Attack();
+                    normalAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in RightHand";
+            }
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class NormalAttackLeftHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Enter && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Normal Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var normalAttack = new NormalPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(normalAttack, null);
+                    normalAttack.Attack();
+                    normalAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in LeftHand";
+            }
+
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class SneakAttackRightHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Backspace && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var sneakAttack = new SneakPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(sneakAttack, null);
+                    sneakAttack.Attack();
+                    sneakAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in RightHand";
+            }
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class SneakAttackLeftHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Backspace && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var sneakAttack = new SneakPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(sneakAttack, null);
+                    sneakAttack.Attack();
+                    sneakAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in LeftHand";
+            }
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class MagicAttackRightHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Delete && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Magic Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var magicAttack = new MagicPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(magicAttack, null);
+                    magicAttack.Attack();
+                    magicAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in RightHand";
+            }
+            
+            Logs.AddLogMessage(newMessage);
+            var logDisp = Display.Display.GetInstance();
+            logDisp.DisplayLog(Logs);
+        }
+        else
+        {
+            NextLink.HandleInput(keyInfo);
+        }
+    }
+}
+
+public class MagicAttackLeftHandLink(GameState state, Logs logs)
+    : ConsoleInputHandlerLink(state, logs)
+{
+    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    {
+        if (keyInfo.Key == ConsoleKey.Delete && ((int)keyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
+        {
+            string newMessage;
+            if (!State.Player.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
+            else if (value.IsUsed)
+            {
+                var enemy = State.ChooseEnemyToFight();
+                if (enemy == null)
+                {
+                    newMessage = "No enemy in range";
+                }
+                else
+                {
+                    newMessage = $"{State.Player.Name} did a Magic Attack on {enemy.Name} [{enemy.Health}] using {value.usedItem!.Name}";
+                    var magicAttack = new MagicPlayerEnemyAttack(state.Player, enemy);
+                    value.usedItem.AcceptAttack(magicAttack, null);
+                    magicAttack.Attack();
+                    magicAttack.CounterAttack();
+                }
+            }
+            else
+            {
+                newMessage = "Invalid Input: No item in LeftHand";
             }
             
             Logs.AddLogMessage(newMessage);

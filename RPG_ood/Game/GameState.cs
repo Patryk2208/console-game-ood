@@ -20,8 +20,11 @@ public abstract class GameState
 
     //display
     //non-input state changes
-    protected MomentChangedEvent MomentChangedEvent { get; init; }
+    public MomentChangedEvent MomentChangedEvent { get; init; }
     protected int MomentDurationMilliseconds { get; init; }
+    
+    //fights
+    public abstract IEnemy? ChooseEnemyToFight();
 }
 
 public class SinglePlayerGameState : GameState
@@ -92,6 +95,7 @@ public class SinglePlayerGameState : GameState
                 Display.Display displaySystem = Display.Display.GetInstance();
                 displaySystem.PrepareGame();
                 displaySystem.DisplayInstructions(CurrentRoom.RoomInstruction);
+                var alive = true;
                 while (_cts.Token.IsCancellationRequested == false)
                 {
                     Thread.Sleep(17);
@@ -107,13 +111,33 @@ public class SinglePlayerGameState : GameState
                     displaySystem.RefreshItemsOnPosition(this);
                     displaySystem.RefreshEnemiesNearby(this);
                     displaySystem.RefreshPlayerInfo(this);
-                    displaySystem.RefreshPlayers(Player);
+                    
+                    alive = displaySystem.RefreshPlayers(Player);
                     
                     displaySystem.DisplayGame();
+
+                    if (!alive)
+                    {
+                        Thread.Sleep(5000);
+                        _cts.Cancel();
+                    }
                     
                     _mutex.ReleaseMutex();
                 }
                 displaySystem.CleanupGame();
             }, _cts.Token);
+    }
+    
+    //fights
+    public override IEnemy? ChooseEnemyToFight()
+    {
+        var random = new Random();
+        var enemiesAdjacent = CurrentRoom
+            .GetBeingsNearby(Player.Pos, 2.5f)
+            .Where(e => e.CanFight() != null)
+            .Select(e => e.CanFight()!)
+            .ToList();
+        if (enemiesAdjacent.Count == 0) return null;
+        return enemiesAdjacent[random.Next(enemiesAdjacent.Count)];
     }
 }

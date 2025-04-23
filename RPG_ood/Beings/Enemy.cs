@@ -6,13 +6,20 @@ namespace RPG_ood.Beings;
 
 public interface IEnemy : INpc
 {
-    public void Attack();
+    public int Health { get; set; }
+    public int Armor { get; set; }
+    public int Damage { get; set; }
+    IEnemy? IBeing.CanFight()
+    {
+        return this;
+    }
 }
 
 public abstract class Enemy : IEnemy
 {
     public Position Pos { get; set; }
     public string Name { get; init; }
+    public bool IsDead { get; set; }
     public AnsiConsoleColor Color { get; init; }
     public MomentChangedEvent MomentChangedEvent { get; init; }
     private int MomentPassed { get; set; } = 0;
@@ -37,6 +44,13 @@ public abstract class Enemy : IEnemy
             return;
         }
         ++MomentPassed;
+        if (IsDead)
+        {
+            state.MomentChangedEvent.RemoveObserver(Name, this);
+            state.CurrentRoom.Elements[Pos.X, Pos.Y].OnStandable = true;
+            Pos = Pos with { X = -1, Y = -1 };
+            return;
+        }
         if (MomentPassed % MomentInterval == 0)
         {
             Wander(state!.CurrentRoom);
@@ -77,7 +91,7 @@ public abstract class Enemy : IEnemy
             //newMessage = $"{P.Name} Moved Up";
         }
     }
-    
+
     protected void MoveRight(Room room)
     {
         if (Pos.Y + 1 < room.Width && room.Elements[Pos.X, Pos.Y + 1].OnStandable)
@@ -88,13 +102,21 @@ public abstract class Enemy : IEnemy
             //newMessage = $"{P.Name} Moved Up";
         }
     }
-    public void TakeDamage(int damage)
+    public int Health { get; set; }
+    public int Armor { get; set; }
+    public int Damage { get; set; }
+    public void ReceiveDamage(int damage)
     {
-        throw new NotImplementedException();
+        Health -= damage;
+        if (Health <= 0)
+        {
+            Die();
+        }
     }
-    public void Attack()
+
+    public void Die()
     {
-        throw new NotImplementedException();
+        IsDead = true;
     }
 }
 
@@ -106,6 +128,9 @@ public class Orc : Enemy
         Name = "Orc";
         Color = AnsiConsoleColor.Green;
         MomentInterval = 8;
+        Health = 100;
+        Armor = 0;
+        Damage = 30;
     }
     public override string ToString()
     {
@@ -121,6 +146,9 @@ public class Giant : Enemy
         Name = "Giant";
         Color = AnsiConsoleColor.Blue;
         MomentInterval = 15;
+        Health = 200;
+        Armor = 50;
+        Damage = 20;
     }
     public override string ToString()
     {

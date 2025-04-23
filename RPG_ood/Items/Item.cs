@@ -1,3 +1,4 @@
+using RPG_ood.Attack;
 using RPG_ood.Effects;
 using RPG_ood.Beings;
 using RPG_ood.Map;
@@ -25,6 +26,8 @@ public interface IPickupable : IItem
 
 public interface IUsable : IPickupable
 {
+    public int Damage { get; set; }
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original);
     public void Use(Player p, string bpName);
     public void AssignAttributes(Dictionary<string, int> attributes);
 }

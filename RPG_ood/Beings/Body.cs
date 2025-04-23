@@ -10,6 +10,16 @@ public class Body
     {
         BodyParts.Add(bp.Name, bp);
     }
+
+    public int GetArmor()
+    {
+        var armor = 0;
+        foreach (var part in BodyParts.Values)
+        {
+            armor += part.GetArmor();
+        }
+        return armor;
+    }
 }
 
 public abstract class BodyPart
@@ -22,12 +32,18 @@ public abstract class BodyPart
     {
         usedItem = item;
     }
-
     public IPickupable TakeOff()
     {
         IPickupable res = usedItem!;
         usedItem = null;
         return res;
+    }
+
+    public int GetArmor()
+    {
+        if(!IsUsed) return 0;
+        var usedItemName = usedItem!.Name;
+        return usedItemName.Contains("Defensive") ? usedItem.Damage : 0;
     }
 }
 

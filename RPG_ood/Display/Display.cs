@@ -13,11 +13,11 @@ public static class ConsoleWriter
     {
         for (int i = 0; i < text.Length; i++)
         {
-            try
+            if (pos.X >= 0 & pos.X < consolePixels.GetLength(0) && pos.Y >= 0 & pos.Y < consolePixels.GetLength(1))
             {
                 consolePixels[pos.X, pos.Y + i] = new ConsolePixel(color, text[i]);
             }
-            catch (Exception)
+            else
             {
                 break;
             }
@@ -213,15 +213,25 @@ public class Display
     {
         foreach (var being in room.Beings)
         {
-            GameBoard[_roomSPX + 1 + being.Pos.X, 1 + being.Pos.Y] =
-                new ConsolePixel(being.Color, being.ToString()[0]);
+            if (being.Pos.IsSet())
+            {
+                GameBoard[_roomSPX + 1 + being.Pos.X, 1 + being.Pos.Y] =
+                    new ConsolePixel(being.Color, being.ToString()[0]);
+            }
         }
     }
 
-    public void RefreshPlayers(Player p)
+    public bool RefreshPlayers(Player p)
     {
-        GameBoard[_roomSPX + 1 + p.Pos.X, 1 + p.Pos.Y] =
-            new ConsolePixel(p.Color, p.ToString()[0]);
+        if (p.Pos.IsSet())
+        {
+            GameBoard[_roomSPX + 1 + p.Pos.X, 1 + p.Pos.Y] =
+                new ConsolePixel(p.Color, p.ToString()[0]);
+            return true;
+        }
+        var coursor = new Position(Height / 2, Width / 2);
+        ConsoleWriter.InsertText(ref _gameBoard, coursor, "GAME OVER", AnsiConsoleColor.Red);
+        return false;
     }
     //specific status display section
 

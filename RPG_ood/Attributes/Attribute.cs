@@ -4,7 +4,7 @@ public abstract class Attribute
 {
     public string Name { get; protected init; }
     public int Value { get; set; }
-    public static int MaxValue { get; protected set; }
+    public int MaxValue { get; protected init; }
 
     public void SetValue(int value)
     {

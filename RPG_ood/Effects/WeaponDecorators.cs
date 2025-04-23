@@ -1,3 +1,4 @@
+using RPG_ood.Attack;
 using RPG_ood.Beings;
 using RPG_ood.Items;
 
@@ -26,6 +27,11 @@ public abstract class WeaponDecorator : IWeapon
     {
         get => Decorated.IsTwoHanded;
         set => Decorated.IsTwoHanded = value;
+    }
+
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    {
+        Decorated.AcceptAttack(playerEnemyFight, original ?? this);
     }
 
     public void Use(Player p, string bpName) {}
@@ -154,12 +160,12 @@ public class OffensiveWeapon : WeaponDecorator
     }
 }
 
-public class HeavyWeapon : WeaponDecorator
+public class SlowWeapon : WeaponDecorator
 {
-    public HeavyWeapon(IWeapon item) : base(item) {}
+    public SlowWeapon(IWeapon item) : base(item) {}
     public override string Name
     {
-        get => "(Heavy) " + Decorated.Name;
+        get => "(Slow) " + Decorated.Name;
         set => Decorated.Name = value;
     }
     public override int Damage
@@ -183,12 +189,12 @@ public class HeavyWeapon : WeaponDecorator
     }
 }
 
-public class LightWeapon : WeaponDecorator
+public class FastWeapon : WeaponDecorator
 {
-    public LightWeapon(IWeapon item) : base(item) {}
+    public FastWeapon(IWeapon item) : base(item) {}
     public override string Name
     {
-        get => "(Light) " + Decorated.Name;
+        get => "(Fast) " + Decorated.Name;
         set => Decorated.Name = value;
     }
     public override int Damage
