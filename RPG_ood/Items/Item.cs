@@ -27,7 +27,8 @@ public interface IPickupable : IItem
 public interface IUsable : IPickupable
 {
     public int Damage { get; set; }
-    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original);
+    public bool IsTwoHanded { get; set; }
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight);
     public void Use(Player p, string bpName);
     public void AssignAttributes(Dictionary<string, int> attributes);
 }

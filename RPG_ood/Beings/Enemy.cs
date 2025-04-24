@@ -110,6 +110,10 @@ public abstract class Enemy : IEnemy
     public void ReceiveDamage(int damage)
     {
         Health -= damage;
+        if (damage > 0)
+        {
+            WasAttacked = true;
+        }
         if (Health <= 0)
         {
             Die();

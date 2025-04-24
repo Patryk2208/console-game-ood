@@ -14,6 +14,7 @@ public interface IElixir : IUsable, IPickupable, IItem, IObserver
 public abstract class Elixir : IElixir
 {
     public int Damage { get; set; } = 0;
+    public bool IsTwoHanded { get; set; } = false;
     public Position Pos { get; set; }
     public string Name { get; set; }
     public AnsiConsoleColor Color { get; set; }
@@ -37,9 +38,9 @@ public abstract class Elixir : IElixir
     public abstract void Use(Player p, string bpName);
     public void AssignAttributes(Dictionary<string, int> attributes) {}
     public abstract void Update(GameState? state);
-    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight)
     {
-        playerEnemyFight.VisitOtherUsable(this, original ?? this);
+        playerEnemyFight.VisitOtherUsable(this);
     }
 
     public override string ToString()

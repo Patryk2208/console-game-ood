@@ -29,9 +29,9 @@ public abstract class WeaponDecorator : IWeapon
         set => Decorated.IsTwoHanded = value;
     }
 
-    public void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    public void AcceptAttack(PlayerEnemyFight playerEnemyFight)
     {
-        Decorated.AcceptAttack(playerEnemyFight, original ?? this);
+        Decorated.AcceptAttack(playerEnemyFight);
     }
 
     public void Use(Player p, string bpName) {}

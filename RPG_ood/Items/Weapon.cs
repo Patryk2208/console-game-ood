@@ -6,7 +6,6 @@ namespace RPG_ood.Items;
 
 public interface IWeapon : IItem, IUsable, IPickupable
 {
-    public bool IsTwoHanded { get; set; }
     void IItem.Interact(Player p)
     {
         p.Eq.AddItemToEq(this);
@@ -40,30 +39,30 @@ public abstract class Weapon : IWeapon
     public bool IsTwoHanded { get; set; }
     public void AssignAttributes(Dictionary<string, int> attributes) {}
     public void Use(Player p, string bpName) {}
-    public abstract void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original);
+    public abstract void AcceptAttack(PlayerEnemyFight playerEnemyFight);
 }
 
 public abstract class HeavyWeapon : Weapon
 {
-    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight)
     {
-        playerEnemyFight.VisitHeavyWeapon(this, original ?? this);
+        playerEnemyFight.VisitHeavyWeapon(this);
     }
 }
 
 public abstract class LightWeapon : Weapon
 {
-    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight)
     {
-        playerEnemyFight.VisitLightWeapon(this, original ?? this);
-}
+        playerEnemyFight.VisitLightWeapon(this); 
+    }
 }
 
 public abstract class MagicalWeapon : Weapon
 {
-    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight, IUsable? original)
+    public override void AcceptAttack(PlayerEnemyFight playerEnemyFight)
     {
-        playerEnemyFight.VisitMagicalWeapon(this, original ?? this);
+        playerEnemyFight.VisitMagicalWeapon(this);
     }
 }
 

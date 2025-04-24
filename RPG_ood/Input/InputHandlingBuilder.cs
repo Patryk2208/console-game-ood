@@ -7,35 +7,50 @@ namespace RPG_ood.Input;
 public class InputHandlingBuilder(GameState state, Logs logs) : IRoomBuilder
 {
     private ConsoleInputHandlerLink _inputChainHead;
-    private List<ConsoleInputHandlerLink> _rawInputHandlers = new List<ConsoleInputHandlerLink>();
+    
+    private List<ConsoleInputHandlerLink> _inputHandlers = new List<ConsoleInputHandlerLink>();
+
+    private List<ConsoleInputHandlerLink> _possibleInputHandlers =
+    [
+        new MoveUpLink(state, logs),
+        new MoveDownLink(state, logs),
+        new MoveLeftLink(state, logs),
+        new MoveRightLink(state, logs),
+        new ExitLink(state, logs),
+        new EquipLink(state, logs),
+        new ThrowLink(state, logs),
+        new ThrowAllLink(state, logs),
+        new PickUpSelectUpLink(state, logs),
+        new PickUpSelectDownLink(state, logs),
+        new EqSelectUpLink(state, logs),
+        new EqSelectDownLink(state, logs),
+        new PutInRightHand(state, logs),
+        new PutInLeftHand(state, logs),
+        new UseFromRightHandLink(state, logs),
+        new UseFromLeftHandLink(state, logs),
+        new NormalAttackRightHandLink(state, logs),
+        new NormalAttackLeftHandLink(state, logs),
+        new SneakAttackRightHandLink(state, logs),
+        new SneakAttackLeftHandLink(state, logs),
+        new MagicAttackRightHandLink(state, logs),
+        new MagicAttackLeftHandLink(state, logs)
+    ];
     private readonly GameState _gameState = state;
     private readonly Logs _logs = logs;
 
     public void BuildEmptyRoom()
     {
-        var up = new MoveUpLink(_gameState, _logs);
-        var down = new MoveDownLink(_gameState, _logs);
-        var left = new MoveLeftLink(_gameState, _logs);
-        var right = new MoveRightLink(_gameState, _logs);
-        var exit = new ExitLink(_gameState, _logs);
-        if (!_rawInputHandlers.Contains(up)) _rawInputHandlers.Add(up);
-        if (!_rawInputHandlers.Contains(down)) _rawInputHandlers.Add(down);
-        if (!_rawInputHandlers.Contains(left)) _rawInputHandlers.Add(left);
-        if (!_rawInputHandlers.Contains(right)) _rawInputHandlers.Add(right);
-        if (!_rawInputHandlers.Contains(exit)) _rawInputHandlers.Add(exit);
+        for (int i = 0; i < 5; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void BuildFullRoom(AnsiConsoleColor color)
     {
-        var up = new MoveUpLink(_gameState, _logs);
-        var down = new MoveDownLink(_gameState, _logs);
-        var left = new MoveLeftLink(_gameState, _logs);
-        var right = new MoveRightLink(_gameState, _logs);
-        var exit = new ExitLink(_gameState, _logs);
-        if (!_rawInputHandlers.Contains(up)) _rawInputHandlers.Add(up);
-        if (!_rawInputHandlers.Contains(down)) _rawInputHandlers.Add(down);
-        if (!_rawInputHandlers.Contains(left)) _rawInputHandlers.Add(left);
-        if (!_rawInputHandlers.Contains(right)) _rawInputHandlers.Add(right);
-        if (!_rawInputHandlers.Contains(exit)) _rawInputHandlers.Add(exit);
+        for (int i = 0; i < 5; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void CarveMaze() {}
     public (int, int) AddRandomPath(int s0 = -1, int s1 = -1)
@@ -46,135 +61,39 @@ public class InputHandlingBuilder(GameState state, Logs logs) : IRoomBuilder
     public void AddCentralRoom(float size) {}
     public void PlaceItems(int maxItemsOfType)
     {
-        var equip = new EquipLink(_gameState, _logs);
-        var throwOut = new ThrowLink(_gameState, _logs);
-        var throwAll = new ThrowAllLink(_gameState, _logs);
-        var selectUp = new PickUpSelectUpLink(_gameState, _logs);
-        var selectDown = new PickUpSelectDownLink(_gameState, _logs);
-        var eqSelectUp = new EqSelectUpLink(_gameState, _logs);
-        var eqSelectDown = new EqSelectDownLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(equip)) _rawInputHandlers.Add(equip);
-        if(!_rawInputHandlers.Contains(throwOut)) _rawInputHandlers.Add(throwOut);
-        if(!_rawInputHandlers.Contains(throwAll)) _rawInputHandlers.Add(throwAll);
-        if(!_rawInputHandlers.Contains(selectUp)) _rawInputHandlers.Add(selectUp);
-        if(!_rawInputHandlers.Contains(selectDown)) _rawInputHandlers.Add(selectDown);
-        if(!_rawInputHandlers.Contains(eqSelectUp)) _rawInputHandlers.Add(eqSelectUp);
-        if(!_rawInputHandlers.Contains(eqSelectDown)) _rawInputHandlers.Add(eqSelectDown);
+        for (int i = 5; i < 12; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void PlaceWeapons(int maxItemsOfType)
     {
-        var equip = new EquipLink(_gameState, _logs);
-        var throwOut = new ThrowLink(_gameState, _logs);
-        var throwAll = new ThrowAllLink(_gameState, _logs);
-        var selectUp = new PickUpSelectUpLink(_gameState, _logs);
-        var selectDown = new PickUpSelectDownLink(_gameState, _logs);
-        var eqSelectUp = new EqSelectUpLink(_gameState, _logs);
-        var eqSelectDown = new EqSelectDownLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(equip)) _rawInputHandlers.Add(equip);
-        if(!_rawInputHandlers.Contains(throwOut)) _rawInputHandlers.Add(throwOut);
-        if(!_rawInputHandlers.Contains(throwAll)) _rawInputHandlers.Add(throwAll);
-        if(!_rawInputHandlers.Contains(selectUp)) _rawInputHandlers.Add(selectUp);
-        if(!_rawInputHandlers.Contains(selectDown)) _rawInputHandlers.Add(selectDown);
-        if(!_rawInputHandlers.Contains(eqSelectUp)) _rawInputHandlers.Add(eqSelectUp);
-        if(!_rawInputHandlers.Contains(eqSelectDown)) _rawInputHandlers.Add(eqSelectDown);
-        var rightHand = new PutInRightHand(_gameState, _logs);
-        var leftHand = new PutInLeftHand(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(rightHand)) _rawInputHandlers.Add(rightHand);
-        if(!_rawInputHandlers.Contains(leftHand)) _rawInputHandlers.Add(leftHand);
-        var useLeft = new UseFromLeftHandLink(_gameState, _logs);
-        var useRight = new UseFromRightHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
-        if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
-        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
-        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
-        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
-        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
-        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
-        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
-        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
-        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
-        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
-        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
-        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
+        for (int i = 5; i < 22; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void PlaceModifiedWeapons(int maxItemsOfType)
     {
-        var equip = new EquipLink(_gameState, _logs);
-        var throwOut = new ThrowLink(_gameState, _logs);
-        var throwAll = new ThrowAllLink(_gameState, _logs);
-        var selectUp = new PickUpSelectUpLink(_gameState, _logs);
-        var selectDown = new PickUpSelectDownLink(_gameState, _logs);
-        var eqSelectUp = new EqSelectUpLink(_gameState, _logs);
-        var eqSelectDown = new EqSelectDownLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(equip)) _rawInputHandlers.Add(equip);
-        if(!_rawInputHandlers.Contains(throwOut)) _rawInputHandlers.Add(throwOut);
-        if(!_rawInputHandlers.Contains(throwAll)) _rawInputHandlers.Add(throwAll);
-        if(!_rawInputHandlers.Contains(selectUp)) _rawInputHandlers.Add(selectUp);
-        if(!_rawInputHandlers.Contains(selectDown)) _rawInputHandlers.Add(selectDown);
-        if(!_rawInputHandlers.Contains(eqSelectUp)) _rawInputHandlers.Add(eqSelectUp);
-        if(!_rawInputHandlers.Contains(eqSelectDown)) _rawInputHandlers.Add(eqSelectDown);
-        var rightHand = new PutInRightHand(_gameState, _logs);
-        var leftHand = new PutInLeftHand(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(rightHand)) _rawInputHandlers.Add(rightHand);
-        if(!_rawInputHandlers.Contains(leftHand)) _rawInputHandlers.Add(leftHand);
-        var useLeft = new UseFromLeftHandLink(_gameState, _logs);
-        var useRight = new UseFromRightHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
-        if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
-        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
-        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
-        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
-        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
-        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
-        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
-        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
-        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
-        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
-        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
-        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
+        for (int i = 5; i < 22; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void PlaceElixirs(int maxItemsOfType)
     {
-        var equip = new EquipLink(_gameState, _logs);
-        var throwOut = new ThrowLink(_gameState, _logs);
-        var throwAll = new ThrowAllLink(_gameState, _logs);
-        var selectUp = new PickUpSelectUpLink(_gameState, _logs);
-        var selectDown = new PickUpSelectDownLink(_gameState, _logs);
-        var eqSelectUp = new EqSelectUpLink(_gameState, _logs);
-        var eqSelectDown = new EqSelectDownLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(equip)) _rawInputHandlers.Add(equip);
-        if(!_rawInputHandlers.Contains(throwOut)) _rawInputHandlers.Add(throwOut);
-        if(!_rawInputHandlers.Contains(throwAll)) _rawInputHandlers.Add(throwAll);
-        if(!_rawInputHandlers.Contains(selectUp)) _rawInputHandlers.Add(selectUp);
-        if(!_rawInputHandlers.Contains(selectDown)) _rawInputHandlers.Add(selectDown);
-        if(!_rawInputHandlers.Contains(eqSelectUp)) _rawInputHandlers.Add(eqSelectUp);
-        if(!_rawInputHandlers.Contains(eqSelectDown)) _rawInputHandlers.Add(eqSelectDown);
-        var useLeft = new UseFromLeftHandLink(_gameState, _logs);
-        var useRight = new UseFromRightHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(useLeft)) _rawInputHandlers.Add(useLeft);
-        if(!_rawInputHandlers.Contains(useRight)) _rawInputHandlers.Add(useRight);
-        var normalRight = new NormalAttackRightHandLink(_gameState, _logs);
-        var normalLeft = new NormalAttackLeftHandLink(_gameState, _logs);
-        var sneakRight = new SneakAttackRightHandLink(_gameState, logs);
-        var sneakLeft = new SneakAttackLeftHandLink(_gameState, logs);
-        var magicRight = new MagicAttackRightHandLink(_gameState, logs);
-        var magicLeft = new MagicAttackLeftHandLink(_gameState, _logs);
-        if(!_rawInputHandlers.Contains(normalRight)) _rawInputHandlers.Add(normalRight);
-        if(!_rawInputHandlers.Contains(normalLeft)) _rawInputHandlers.Add(normalLeft);
-        if(!_rawInputHandlers.Contains(sneakRight)) _rawInputHandlers.Add(sneakRight);
-        if(!_rawInputHandlers.Contains(sneakLeft)) _rawInputHandlers.Add(sneakLeft);
-        if(!_rawInputHandlers.Contains(magicRight)) _rawInputHandlers.Add(magicRight);
-        if(!_rawInputHandlers.Contains(magicLeft)) _rawInputHandlers.Add(magicLeft);
+        for (int i = 5; i < 22; i++)
+        {
+            if(!_inputHandlers.Contains(_possibleInputHandlers[i])) _inputHandlers.Add(_possibleInputHandlers[i]);
+        }
     }
     public void PlacePlayer(Player player) {}
     public void PlaceEnemies(int maxItemsOfType) {}
     public ConsoleInputHandlerLink GetResult()
     {
         _inputChainHead = new SentinelLink(_gameState, _logs);
-        _rawInputHandlers.Reverse();
-        foreach (var handler in _rawInputHandlers)
+        _inputHandlers.Reverse();
+        foreach (var handler in _inputHandlers)
         {
             handler.NextLink = _inputChainHead;
             _inputChainHead = handler;

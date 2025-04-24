@@ -159,6 +159,10 @@ public class Player : IBeing
     public void ReceiveDamage(int damage)
     {
         Attr["Health"].Value -= damage;
+        if (damage > 0)
+        {
+            WasAttacked = true;
+        }
         if (Attr["Health"].Value <= 0)
         {
             Die();
