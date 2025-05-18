@@ -34,17 +34,17 @@ public class NormalPlayersAttack(Player attacker, Player defender, IUsable weapo
 {
     public override void VisitHeavyWeapon(HeavyWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)
@@ -57,17 +57,17 @@ public class SneakPlayersAttack(Player attacker, Player defender, IUsable weapon
 {
     public override void VisitHeavyWeapon(HeavyWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)
@@ -80,17 +80,17 @@ public class MagicPlayersAttack(Player attacker, Player defender, IUsable weapon
 {
     public override void VisitHeavyWeapon(HeavyWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
     {
-        AttackDamage = 1;
+        AttackDamage = 5;
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)

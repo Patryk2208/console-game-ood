@@ -8,7 +8,7 @@ using RPG_ood.App.Client;
 using RPG_ood.App.Server;
 using RPG_ood.Commands;
 using RPG_ood.Communication.Snapshots;
-using RPG_ood.Controller.Input;
+using RPG_ood.Input;
 using RPG_ood.Model.Beings;
 using RPG_ood.Model.Effects;
 using RPG_ood.Model.Game;
@@ -55,11 +55,12 @@ static class Program
         //Console.WriteLine(json);*/
 
         //Command serialization/deserialization
-        /*var k = Console.ReadKey();
-        var c = new Command(k, 2234);
-        var json = JsonSerializer.Serialize(c);
+        /*var c = new Controller();
+        var k = Console.ReadKey();
+        var command = c.ParseInputIntoCommand(new InputUnit(0, k));
+        var json = JsonSerializer.Serialize(command);
         Console.WriteLine(json);
-        var command = JsonSerializer.Deserialize<Command>(json);
+        command = JsonSerializer.Deserialize<Command>(json);
         Console.WriteLine("Done");*/
 
         //sockets

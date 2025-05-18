@@ -1,43 +1,38 @@
-using RPG_ood.Input;
 using RPG_ood.Map;
-using RPG_ood.Model;
-using RPG_ood.Model.Beings;
-using RPG_ood.Model.Game;
 using RPG_ood.Model.Game.GameState;
 
-namespace RPG_ood.Controller.Input;
+namespace RPG_ood.Input;
 
-public class InputHandlingBuilder(GameState state) : IRoomBuilder
+public class InputHandlingBuilder : IRoomBuilder
 {
     private ConsoleInputHandlerLink _inputChainHead;
     
-    private List<ConsoleInputHandlerLink> _inputHandlers = new List<ConsoleInputHandlerLink>();
+    private readonly List<ConsoleInputHandlerLink> _inputHandlers = new List<ConsoleInputHandlerLink>();
 
-    private List<ConsoleInputHandlerLink> _possibleInputHandlers =
+    private readonly List<ConsoleInputHandlerLink> _possibleInputHandlers =
     [
-        new MoveUpLink(state),
-        new MoveDownLink(state),
-        new MoveLeftLink(state),
-        new MoveRightLink(state),
-        new ExitLink(state),
-        new EquipLink(state),
-        new ThrowLink(state),
-        new ThrowAllLink(state),
-        new PickUpSelectUpLink(state),
-        new PickUpSelectDownLink(state),
-        new EqSelectUpLink(state),
-        new EqSelectDownLink(state),
-        new PutInRightHand(state),
-        new PutInLeftHand(state),
-        new UseFromRightHandLink(state),
-        new UseFromLeftHandLink(state),
-        new NormalAttackRightHandLink(state),
-        new NormalAttackLeftHandLink(state),
-        new SneakAttackRightHandLink(state),
-        new SneakAttackLeftHandLink(state),
-        new MagicAttackRightHandLink(state),
-        new MagicAttackLeftHandLink(state),
-        new VerifyUserLink(state)
+        new MoveUpLink(),
+        new MoveDownLink(),
+        new MoveLeftLink(),
+        new MoveRightLink(),
+        new ExitLink(),
+        new EquipLink(),
+        new ThrowLink(),
+        new ThrowAllLink(),
+        new PickUpSelectUpLink(),
+        new PickUpSelectDownLink(),
+        new EqSelectUpLink(),
+        new EqSelectDownLink(),
+        new PutInRightHandLink(),
+        new PutInLeftHandLink(),
+        new UseFromRightHandLink(),
+        new UseFromLeftHandLink(),
+        new NormalAttackRightHandLink(),
+        new NormalAttackLeftHandLink(),
+        new SneakAttackRightHandLink(),
+        new SneakAttackLeftHandLink(),
+        new MagicAttackRightHandLink(),
+        new MagicAttackLeftHandLink()
     ];
 
     public void BuildEmptyRoom()
@@ -90,19 +85,23 @@ public class InputHandlingBuilder(GameState state) : IRoomBuilder
         }
     }
     public void PlaceEnemies(int maxItemsOfType) {}
+
+    public void BuildAll()
+    {
+        foreach (var t in _possibleInputHandlers)
+        {
+            if(!_inputHandlers.Contains(t)) _inputHandlers.Add(t);
+        }
+    }
     public ConsoleInputHandlerLink GetResult()
     {
-        _inputChainHead = new SentinelLink(state);
+        _inputChainHead = new SentinelLink();
         _inputHandlers.Reverse();
         foreach (var handler in _inputHandlers)
         {
             handler.SetNextLink(_inputChainHead);
             _inputChainHead = handler;
         }
-
-        var verify = _possibleInputHandlers[^1];
-        verify.SetNextLink(_inputChainHead);
-        _inputChainHead = verify;
         return _inputChainHead;
     }
 }

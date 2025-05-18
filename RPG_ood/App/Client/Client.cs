@@ -8,7 +8,7 @@ using System.Text.Json;
 using System.Threading.Channels;
 using RPG_ood.Commands;
 using RPG_ood.Communication.Snapshots;
-using RPG_ood.Controller.Input;
+using RPG_ood.Input;
 using RPG_ood.Model.GameSnapshot;
 using RPG_ood.View.Display;
 
@@ -19,8 +19,8 @@ public class Client
     private long Id { get; set; }
     private RelativeGameState StateModel { get; init; }
     private View.Display.View View { get; init; }
+    private Input.Controller Controller {get; init;}
     private Channel<Command> CommandChannel { get; init; }
-    //private Task[] MvcTasks { get; init; }
     private IPAddress ServerIp { get; set; }
     private int ServerPort { get; set; }
 
@@ -30,10 +30,10 @@ public class Client
         var mvc = new MvcSynchronization();
         StateModel = new RelativeGameState(mvc);
         View = new View.Display.View(StateModel, mvc);
+        Controller = new Controller();
         CommandChannel = Channel.CreateUnbounded<Command>();
         ServerIp = serverIp ?? IPAddress.Loopback;
         ServerPort = serverPort;
-        //MvcTasks = new Task[1];
         //todo initialize handlers
 
     }
@@ -84,10 +84,6 @@ public class Client
                 StateModel.LastSyncMoment = receivedSnapshot.SyncMoment;
                 StateModel.Player = receivedSnapshot.Player;
                 StateModel.CurrentRelativeRoom = new RelativeRoomState(receivedSnapshot.CurrentRoomSnapshot);
-                /*if (StateModel.Player.IsDead)
-                {
-                    StateModel.Sync.ShouldExitController = true;
-                }*/
 
                 View.Refresh();
                 StateModel.Sync.GameMutex.ReleaseMutex();
@@ -97,10 +93,10 @@ public class Client
         catch (Exception e)
         {
             Console.WriteLine(e);
-            StateModel.Sync.ShouldAllExit = true;
         }
         finally
         {
+            StateModel.Sync.ShouldAllExit = true;
             View.Cleanup();
         }
     }
@@ -144,35 +140,29 @@ public class Client
                 StateModel.Sync.GameMutex.WaitOne();
                 View.Refresh();
                 StateModel.Sync.GameMutex.ReleaseMutex();
-                
+
                 if (Id == long.MaxValue) continue;
-                var command = new Command(key, Id);
-                if (command == null) throw new Exception("Command error");
-                
+                var command = Controller.ParseInputIntoCommand(new InputUnit(Id, key));
+                if (command == null) continue;
+
                 await PrepareAndWriteCompressedCommand(stream, command, CompressionLevel.Optimal);
 
-                if (command.KeyInfo.Key == ConsoleKey.Escape)
+                if (key.Key == ConsoleKey.Escape)
                 {
-                    break;
+                    StateModel.Sync.ShouldExitController = true;
                 }
             }
 
         }
         catch (Exception e)
         {
-            StateModel.Sync.ShouldAllExit = true;
             Console.WriteLine(e);
         }
+        finally
+        {
+            StateModel.Sync.ShouldAllExit = true;
+        }
     }
-    
-    /*private byte[] PrepareMessage(Command command)
-    {
-        var json = JsonSerializer.Serialize(command);
-        byte[] msg = new byte[4 + Encoding.UTF8.GetByteCount(json)];
-        BinaryPrimitives.WriteInt32LittleEndian(msg.AsSpan(0, 4), json.Length);
-        Encoding.UTF8.GetBytes(json, 0, json.Length, msg, 4);
-        return msg;
-    }*/
     
     private async Task PrepareAndWriteCompressedCommand(NetworkStream stream, Command command, CompressionLevel compressionLevel)
     {

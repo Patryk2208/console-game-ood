@@ -1,20 +1,20 @@
 using System.Threading.Channels;
 using RPG_ood.App;
 using RPG_ood.Commands;
-using RPG_ood.Controller.Input;
+using RPG_ood.Model.Game.GameState;
 
 namespace RPG_ood.Input;
 
 public class Input
 {
-    public ConsoleInputHandlerLink ChainOfResponsibilityHandler { private get; set; }
+    private GameState State { get; init; }
     private MvcSynchronization Sync { get; set; }
     private Channel<Command> CommandsChannel { get; set; }
-    public Input(MvcSynchronization sync, Channel<Command> commandsChannel)
+    public Input(GameState state, MvcSynchronization sync, Channel<Command> commandsChannel)
     {
+        State = state;
         Sync = sync;
         CommandsChannel = commandsChannel;
-        ChainOfResponsibilityHandler = null!;
     }
 
     public async Task RunInput()
@@ -23,9 +23,9 @@ public class Input
         {
             var command = await CommandsChannel.Reader.ReadAsync();
             Sync.GameMutex.WaitOne();
-            ChainOfResponsibilityHandler.HandleInput(command);
+            command.Execute(State);
             Sync.GameMutex.ReleaseMutex();
-            Console.WriteLine($"Server executed command {command.KeyInfo.Key.ToString()}.");
+            Console.WriteLine($"Server executed command {nameof(command)}.");
         }
     }
     

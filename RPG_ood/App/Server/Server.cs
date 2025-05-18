@@ -8,7 +8,6 @@ using System.Text.Unicode;
 using System.Threading.Channels;
 using RPG_ood.Commands;
 using RPG_ood.Communication.Snapshots;
-using RPG_ood.Controller.Input;
 using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game;
 using RPG_ood.Model.Game.GameState;
@@ -24,7 +23,7 @@ public class Server
     private Dictionary<long, (Task, Task)> ConnectedClients { get; init; }
     private List<long> ConnectedClientIds { get; init; }
     private Mutex ConnectionMutex { get; init; }
-    private Dictionary<long, Channel<GameSnapshot>> Channels { get; init; }
+    private Dictionary<long, Channel<GameSnapshot?>> Channels { get; init; }
     private Channel<Command> CommandsChannel { get; init; }
     private Mutex CommandMutex { get; init; }
     private const int MaxClients = 10;
@@ -35,13 +34,13 @@ public class Server
         CommandsChannel = Channel.CreateUnbounded<Command>();
         CommandMutex = new Mutex();
         Mvc = new MvcSynchronization();
-        Controller = new Input.Input(Mvc, CommandsChannel);
         Channels = new ();
-        TotalState = new GameState(Mvc, Controller, Channels);
+        ConnectionMutex = new Mutex();
+        TotalState = new GameState(Mvc, Channels, ConnectionMutex);
+        Controller = new Input.Input(TotalState, Mvc, CommandsChannel);
         Port = port;
         ConnectedClients = new();
         ConnectedClientIds = new();
-        ConnectionMutex = new Mutex();
     }
 
     public async Task Run()
@@ -117,11 +116,22 @@ public class Server
                     await stream.WriteAsync(BitConverter.GetBytes(playerId));
                     while (!Mvc.ShouldAllExit)
                     {
-                        if (!Channels.ContainsKey(playerId)) throw new Exception("Player disconnected");
                         var gameSnapshot = await Channels[playerId].Reader.ReadAsync();
                         
+                        if (gameSnapshot == null)
+                        {
+                            await cts.CancelAsync();
+                            ConnectionMutex.WaitOne();
+                            ConnectedClients.Remove(playerId);
+                            ConnectedClientIds.Remove(playerId);
+                            Channels.Remove(playerId);
+                            ConnectionMutex.ReleaseMutex();
+                            client.Close();
+                            return;
+                        }
+
                         await PrepareAndWriteCompressedMessage(stream, gameSnapshot, CompressionLevel.SmallestSize);
-                        
+
                         Console.WriteLine($"Server - Player {playerId} was sent an update");
                     }
                 }
@@ -131,7 +141,10 @@ public class Server
         {
             Console.WriteLine(e);
             client.Close();
-            Console.WriteLine($"Player {playerId} disconnected");
+        }
+        finally
+        {
+            Console.WriteLine($"Player {playerId} output disconnected");
         }
     }
     private async Task PrepareAndWriteCompressedMessage(NetworkStream stream, GameSnapshot gameSnapshot, CompressionLevel compressionLevel)
@@ -167,16 +180,11 @@ public class Server
                         CommandMutex.WaitOne();
                         await CommandsChannel.Writer.WriteAsync(receivedCommand);
                         CommandMutex.ReleaseMutex();
-                        
-                        if (receivedCommand.KeyInfo.Key != ConsoleKey.Escape) continue;
-                        await cts.CancelAsync();
-                        client.Close();
-                        ConnectionMutex.WaitOne();
-                        ConnectedClients.Remove(playerId);
-                        ConnectedClientIds.Remove(playerId);
-                        Channels.Remove(playerId);
-                        ConnectionMutex.ReleaseMutex();
-                        return;
+
+                        if (receivedCommand.GetType() == typeof(ExitCommand))
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -185,7 +193,10 @@ public class Server
         {
             Console.WriteLine(e);
             client.Close();
-            Console.WriteLine($"Player {playerId} disconnected");
+        }
+        finally
+        {
+            Console.WriteLine($"Player {playerId} input disconnected");
         }
     }
     

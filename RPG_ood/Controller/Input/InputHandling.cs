@@ -1,3 +1,4 @@
+using RPG_ood.App;
 using RPG_ood.Commands;
 using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game.Attack;
@@ -5,755 +6,365 @@ using RPG_ood.Model.Game.GameState;
 
 namespace RPG_ood.Input;
 
-public abstract class ConsoleInputHandlerLink (GameState state)
+public abstract class ConsoleInputHandlerLink
 {
     protected ConsoleInputHandlerLink NextLink { get; set; }
-    protected GameState State { get; } = state;
-
     public void SetNextLink(ConsoleInputHandlerLink nextLink)
     {
         NextLink = nextLink;
     }
-    public abstract void HandleInput(Command command);
+    public abstract void HandleInput(InputUnit iu, out Command? command);
 }
 
-public class VerifyUserLink(GameState state) : ConsoleInputHandlerLink(state)
+/*public class VerifyUserLink(GameState state) : ConsoleInputHandlerLink(state)
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu)
     {
-        if (State.Players.ContainsKey(command.PlayerId) && !State.Players[command.PlayerId].IsDead)
+        if (State.Players.ContainsKey(iu.PlayerId) && !State.Players[iu.PlayerId].IsDead)
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu);
         }
         else
         {
             State.Logs.AddLogMessage("Player with specified id does not exist or is dead");
         }
     }
-}
+}*/
 
-public class MoveUpLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class MoveUpLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.W)
+        if (iu.KeyInfo.Key == ConsoleKey.W)
         {
-            var p = State.Players[command.PlayerId];
-            p.MoveUp(State.CurrentRoom);
+            command = new MoveUpCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class MoveDownLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class MoveDownLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.S)
+        if (iu.KeyInfo.Key == ConsoleKey.S)
         {
-            var p = State.Players[command.PlayerId];
-            p.MoveDown(State.CurrentRoom);
+            command = new MoveDownCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class MoveLeftLink(GameState state) 
-    : ConsoleInputHandlerLink(state)
+public class MoveLeftLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.A)
+        if (iu.KeyInfo.Key == ConsoleKey.A)
         {
-            var p = State.Players[command.PlayerId];
-            p.MoveLeft(State.CurrentRoom);
+            command = new MoveLeftCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class MoveRightLink(GameState state) 
-    : ConsoleInputHandlerLink(state)
+public class MoveRightLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.D)
+        if (iu.KeyInfo.Key == ConsoleKey.D)
         {
-            var p = State.Players[command.PlayerId];
-            p.MoveRight(State.CurrentRoom);
+            command = new MoveRightCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class EquipLink(GameState state) 
-    : ConsoleInputHandlerLink(state)
+public class EquipLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.E)
+        if (iu.KeyInfo.Key == ConsoleKey.E)
         {
-            var p = State.Players[command.PlayerId];
-            var itemsAtPos = State.CurrentRoom.GetItemsAtPos(p.Pos).ToList();
-            if (!itemsAtPos.Any()) return;
-            var item = itemsAtPos.ElementAt(p.PickUpCursor);
-            var newMessage = $"{p.Name} picked up {item.Name} at {item.Pos}";
-            item.Pos = item.Pos with { X = -1, Y = -1 };
-            p.PickUpItem(item);
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new EquipCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class ThrowLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class ThrowLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.T)
+        if (iu.KeyInfo.Key == ConsoleKey.T)
         {
-            var p = State.Players[command.PlayerId];
-            if (p.Eq.Eq.Count <= 0) return;
-            var newMessage =
-                $"{p.Name} dropped {p.Eq.Eq[p.Eq.EqPointer].Name}";
-            p.DropItem();
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new ThrowCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class ThrowAllLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class ThrowAllLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Y)
+        if (iu.KeyInfo.Key == ConsoleKey.Y)
         {
-            var p = State.Players[command.PlayerId];
-            if (p.Eq.Eq.Count <= 0) return;
-            var newMessage = $"{p.Name} dropped all items";
-            while (p.Eq.Eq.Count > 0)
-            {
-                p.DropItem();
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new ThrowAllCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class EqSelectDownLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class EqSelectDownLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.LeftArrow)
+        if (iu.KeyInfo.Key == ConsoleKey.LeftArrow)
         {
-            var p = State.Players[command.PlayerId];
-            p.Eq.TryMovePointerLeft();
+            command = new EqSelectDownCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class EqSelectUpLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class EqSelectUpLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.RightArrow)
+        if (iu.KeyInfo.Key == ConsoleKey.RightArrow)
         {
-            var p = State.Players[command.PlayerId];
-            p.Eq.TryMovePointerRight();
+            command = new EqSelectUpCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class PickUpSelectDownLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class PickUpSelectDownLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.DownArrow)
+        if (iu.KeyInfo.Key == ConsoleKey.DownArrow)
         {
-            var p = State.Players[command.PlayerId];
-            p.PickUpCursor++;
+            command = new PickUpSelectDownCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class PickUpSelectUpLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class PickUpSelectUpLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.UpArrow)
+        if (iu.KeyInfo.Key == ConsoleKey.UpArrow)
         {
-            var p = State.Players[command.PlayerId];
-            p.PickUpCursor = Math.Max(0, p.PickUpCursor - 1);
+            command = new PickUpSelectUpCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class PutInRightHand(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class PutInRightHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.P)
+        if (iu.KeyInfo.Key == ConsoleKey.P)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.ContainsKey("RightHand")) return;
-            if (p.Bd.BodyParts["RightHand"].IsUsed)
-            {
-                p.TryTakeOffItem(p.Bd.BodyParts["RightHand"]);
-                newMessage = $"{p.Name} put {p.Eq.Eq[p.Eq.EqPointer].Name} from right hand back to eq";
-            }
-            else
-            {
-                if (p.Eq.Eq.Count == 0) return;
-                newMessage = $"{p.Name} took {p.Eq.Eq[p.Eq.EqPointer].Name} to right hand";
-                p.TryTakeItem(p.Bd, "RightHand");
-            }
-
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new PutInRightHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class PutInLeftHand(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class PutInLeftHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.L)
+        if (iu.KeyInfo.Key == ConsoleKey.L)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.ContainsKey("LeftHand")) return;
-            if (p.Bd.BodyParts["LeftHand"].IsUsed)
-            {
-                p.TryTakeOffItem(p.Bd.BodyParts["LeftHand"]);
-                newMessage = $"{p.Name} put {p.Eq.Eq[p.Eq.EqPointer].Name} from left hand back to eq";
-            }
-            else
-            {
-                if (p.Eq.Eq.Count == 0) return;
-                newMessage = $"{p.Name} took {p.Eq.Eq[p.Eq.EqPointer].Name} to left hand";
-                p.TryTakeItem(p.Bd, "LeftHand");
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new PutInLeftHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class UseFromLeftHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class UseFromLeftHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.U && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
+        if (iu.KeyInfo.Key == ConsoleKey.U && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
-            else if (value.IsUsed)
-            {
-                newMessage = $"{p.Name} used {value.UsedItem!.Name}";
-                p.UseItemInHand(value.UsedItem!, "LeftHand");
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in LeftHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new UseFromLeftHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class UseFromRightHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class UseFromRightHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.U && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
+        if (iu.KeyInfo.Key == ConsoleKey.U && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
-            else if (value.IsUsed)
-            {
-                newMessage = $"{p.Name} used {value.UsedItem!.Name}";
-                p.UseItemInHand(value.UsedItem!, "RightHand");
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in RightHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new UseFromRightHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class NormalAttackRightHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class NormalAttackRightHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Enter && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0
-            || command.KeyInfo.Key == ConsoleKey.D1)
+        if (iu.KeyInfo.Key == ConsoleKey.Enter && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
         {
-            var p = State.Players[command.PlayerId];
-            var newMessage = "";
-            if (!p.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Normal Attack on {rivalPlayer.Name}";
-                    Fight normalAttack = new NormalPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(normalAttack);
-                    normalAttack.Attack();
-                    normalAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Normal Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight normalAttack = new NormalPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(normalAttack);
-                        normalAttack.Attack();
-                        normalAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in RightHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            
-            if (command.KeyInfo.Key == ConsoleKey.D1 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new NormalAttackRightHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class NormalAttackLeftHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class NormalAttackLeftHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Enter && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1
-            || command.KeyInfo.Key == ConsoleKey.D1)
+        if (iu.KeyInfo.Key == ConsoleKey.Enter && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Normal Attack on {rivalPlayer.Name}";
-                    Fight normalAttack = new NormalPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(normalAttack);
-                    normalAttack.Attack();
-                    normalAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Normal Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight normalAttack = new NormalPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(normalAttack);
-                        normalAttack.Attack();
-                        normalAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in LeftHand";
-            }
-
-            
-            State.Logs.AddLogMessage(newMessage);
-            
-            if (command.KeyInfo.Key == ConsoleKey.D1 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new NormalAttackLeftHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class SneakAttackRightHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class SneakAttackRightHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Backspace && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0
-            || command.KeyInfo.Key == ConsoleKey.D2)
+        if (iu.KeyInfo.Key == ConsoleKey.Backspace && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Sneak Attack on {rivalPlayer.Name}";
-                    Fight sneakAttack = new SneakPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(sneakAttack);
-                    sneakAttack.Attack();
-                    sneakAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight sneakAttack = new SneakPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(sneakAttack);
-                        sneakAttack.Attack();
-                        sneakAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in RightHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            
-            if (command.KeyInfo.Key == ConsoleKey.D2 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new SneakAttackRightHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class SneakAttackLeftHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class SneakAttackLeftHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Backspace && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1
-            || command.KeyInfo.Key == ConsoleKey.D2)
+        if (iu.KeyInfo.Key == ConsoleKey.Backspace && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Sneak Attack on {rivalPlayer.Name}";
-                    Fight sneakAttack = new SneakPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(sneakAttack);
-                    sneakAttack.Attack();
-                    sneakAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight sneakAttack = new SneakPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(sneakAttack);
-                        sneakAttack.Attack();
-                        sneakAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in LeftHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            
-            if (command.KeyInfo.Key == ConsoleKey.D2 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new SneakAttackLeftHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class MagicAttackRightHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class MagicAttackRightHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Delete && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0
-            || command.KeyInfo.Key == ConsoleKey.D3)
+        if (iu.KeyInfo.Key == ConsoleKey.Delete && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 0)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("RightHand", out BodyPart? value)) newMessage = "Invalid Input: No RightHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Magic Attack on {rivalPlayer.Name}";
-                    Fight magicAttack = new MagicPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(magicAttack);
-                    magicAttack.Attack();
-                    magicAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight magicAttack = new MagicPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(magicAttack);
-                        magicAttack.Attack();
-                        magicAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in RightHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-            
-            if (command.KeyInfo.Key == ConsoleKey.D3 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new MagicAttackRightHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class MagicAttackLeftHandLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class MagicAttackLeftHandLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Delete && ((int)command.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1
-            || command.KeyInfo.Key == ConsoleKey.D3)
+        if (iu.KeyInfo.Key == ConsoleKey.Delete && ((int)iu.KeyInfo.Modifiers & (int)ConsoleModifiers.Alt) == 1)
         {
-            var p = State.Players[command.PlayerId];
-            string newMessage;
-            if (!p.Bd.BodyParts.TryGetValue("LeftHand", out BodyPart? value)) newMessage = "Invalid Input: No LeftHand";
-            else if (value.IsUsed)
-            {
-                var rivalPlayer = State.ChoosePlayerToFight(p);
-                if (rivalPlayer != null)
-                {
-                    newMessage =
-                        $"{p.Name} did a Magic Attack on {rivalPlayer.Name}";
-                    Fight magicAttack = new MagicPlayersAttack(p, rivalPlayer, value.UsedItem!);
-                    value.UsedItem!.AcceptAttack(magicAttack);
-                    magicAttack.Attack();
-                    magicAttack.CounterAttack();
-                }
-                else
-                {
-                    var enemy = State.ChooseEnemyToFight(p);
-                    if (enemy == null)
-                    {
-                        newMessage = "Nobody in range";
-                    }
-                    else
-                    {
-                        newMessage =
-                            $"{p.Name} did a Sneak Attack on {enemy.Name} [{enemy.Health}] using {value.UsedItem!.Name}";
-                        Fight magicAttack = new MagicPlayerEnemyAttack(p, enemy, value.UsedItem!);
-                        value.UsedItem!.AcceptAttack(magicAttack);
-                        magicAttack.Attack();
-                        magicAttack.CounterAttack();
-                    }
-                }
-            }
-            else
-            {
-                newMessage = "Invalid Input: No item in LeftHand";
-            }
-            
-            State.Logs.AddLogMessage(newMessage);
-        
-            if (command.KeyInfo.Key == ConsoleKey.D3 && (value == null || value!.UsedItem == null || !value.UsedItem.IsTwoHanded))
-            {
-                NextLink.HandleInput(command);
-            }
-            //Display.GetInstance().DisplayLog(State.Logs);
+            command = new MagicAttackLeftHandCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class ExitLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class ExitLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        if (command.KeyInfo.Key == ConsoleKey.Escape)
+        if (iu.KeyInfo.Key == ConsoleKey.Escape)
         {
-            State.RemovePlayer(command.PlayerId);
+            command = new ExitCommand(iu.PlayerId);
         }
         else
         {
-            NextLink.HandleInput(command);
+            NextLink.HandleInput(iu, out command);
         }
     }
 }
 
-public class SentinelLink(GameState state)
-    : ConsoleInputHandlerLink(state)
+public class SentinelLink : ConsoleInputHandlerLink
 {
-    public override void HandleInput(Command command)
+    public override void HandleInput(InputUnit iu, out Command? command)
     {
-        State.Logs.AddLogMessage("Bad input or an unassociated key pressed.");
-        //Display.GetInstance().DisplayLog(State.Logs);
+        command = null;
     }
 }
