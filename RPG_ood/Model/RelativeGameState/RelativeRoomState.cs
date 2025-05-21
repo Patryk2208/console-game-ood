@@ -11,7 +11,7 @@ public class RelativeRoomState
     public string Name { get; protected set; }
     public int Width { get; }
     public int Height { get; }
-    public Instruction RoomInstruction { get; set; }
+    //public Instruction RoomInstruction { get; set; }
     public MapElement[,] Elements { get; protected set; }
     public List<IBeing> Beings { get; protected set; }
     public List<IItem> Items { get; protected set; }
@@ -26,7 +26,6 @@ public class RelativeRoomState
         Beings = roomSnapshot.Beings;
         Items = roomSnapshot.Items;
         Players = roomSnapshot.Players;
-        RoomInstruction = new Instruction();
     }
     public IEnumerable<IItem> GetItemsAtPos(Position pos)
     {

@@ -185,11 +185,11 @@ public class Display
         coursor = coursor with { X = coursor.X = _roomSPX / 2, Y = state.CurrentRelativeRoom.Width + 50 };
         ConsoleWriter.InsertText(ref _gameBoard, coursor, $"Applied Effects:");
         //todo elixir effects fixable
-        /*foreach (var effectName in state.Player.MomentChangedEvent.Names)
+        foreach (var effectName in state.AppliedEffects)
         {
             coursor = coursor with { X = coursor.X + 1 };
             ConsoleWriter.InsertText(ref _gameBoard, coursor, $"{effectName}");
-        }*/
+        }
     }
 
     //map display section
@@ -288,7 +288,7 @@ public class Display
 
     public void DisplayLog(RelativeLogs logs)
     {
-        var cursorYpos = (int)(Width * 0.6);
+        var cursorYpos = Width;
         var cursorXpos = Height + 3;
         Console.SetCursorPosition(cursorYpos, cursorXpos);
         foreach (var log in logs.LogMessages)

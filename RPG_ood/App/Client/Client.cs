@@ -83,6 +83,7 @@ public class Client
                 StateModel.Sync.GameMutex.WaitOne();
                 StateModel.LastSyncMoment = receivedSnapshot.SyncMoment;
                 StateModel.Player = receivedSnapshot.Player;
+                StateModel.AppliedEffects = receivedSnapshot.AppliedEffects;
                 StateModel.CurrentRelativeRoom = new RelativeRoomState(receivedSnapshot.CurrentRoomSnapshot);
                 StateModel.CurrentRelativeLogs = new RelativeLogs(receivedSnapshot.Logs);
 

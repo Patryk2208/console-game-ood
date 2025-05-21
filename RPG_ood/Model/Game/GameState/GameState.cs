@@ -16,7 +16,7 @@ public class GameState
 {
     public Dictionary<long, Player> Players { get; set; }
     private Dictionary<long, Channel<Communication.Snapshots.GameSnapshot?>> PlayerChannels { get; set; }
-    private Mutex ConnectionMutex { get; set; }
+    public Mutex ConnectionMutex { get; set; }
     public World World { get; protected init; }
     public RPG_ood.Map.Map CurrentMap { get; protected set; }
     public Room CurrentRoom { get; protected set; }
@@ -24,8 +24,8 @@ public class GameState
     
     
     public MomentChangedEvent MomentChangedEvent { get; init; }
-    private int MomentDurationMilliseconds { get; init; }
-    public long CurrentMoment { get; private set; }
+    public int MomentDurationMilliseconds { get; init; }
+    public long CurrentMoment { get; set; }
     
     
     private MvcSynchronization Sync { get; init; }
@@ -63,24 +63,6 @@ public class GameState
         foreach (var being in CurrentRoom.Beings)
         {
             MomentChangedEvent.AddObserver(being.Name, being);
-        }
-    }
-
-    public async Task RunGame()
-    {
-        while (Sync.ShouldExitModel == false)
-        {
-            await Task.Delay(MomentDurationMilliseconds);
-            Sync.GameMutex.WaitOne();
-            
-            ConnectionMutex.WaitOne();
-            await BroadcastStates();
-            ConnectionMutex.ReleaseMutex();
-            
-            MomentChangedEvent.NotifyObservers(this, 0);
-            ++CurrentMoment;
-            
-            Sync.GameMutex.ReleaseMutex();
         }
     }
     
@@ -126,7 +108,7 @@ public class GameState
         }
         var spawnCoords = possibleSpawnPositions[new Random().Next(possibleSpawnPositions.Count)];
         Players[id].Pos = new Position(spawnCoords.Item1, spawnCoords.Item2);
-        var channel = Channel.CreateUnbounded<Communication.Snapshots.GameSnapshot>();
+        var channel = Channel.CreateUnbounded<Communication.Snapshots.GameSnapshot?>();
         PlayerChannels.Add(id, channel);
     }
 
@@ -141,7 +123,7 @@ public class GameState
         MomentChangedEvent.RemoveObserver(player.Name, player);
     }
     
-    private async Task BroadcastStates()
+    public async Task BroadcastStates()
     {
         foreach (var channel in PlayerChannels)
         {

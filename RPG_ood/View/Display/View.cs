@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using RPG_ood.App;
+using RPG_ood.Map;
 using RPG_ood.Model.Game;
 using RPG_ood.Model.RelativeGameState;
 
@@ -13,8 +14,12 @@ public class View(RelativeGameState relativeGameState, MvcSynchronization sync)
 
     public void Prepare()
     {
+        var builder = new RoomInstructionBuilder();
+        var dir = new PlayableMaze(builder);
+        dir.Build();
         var displaySystem = Display.GetInstance();
         displaySystem.PrepareGame();
+        displaySystem.DisplayInstructions(builder.GetResult());
     }
 
     public void Refresh()

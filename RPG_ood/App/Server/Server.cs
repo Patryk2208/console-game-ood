@@ -46,7 +46,7 @@ public class Server
     public async Task Run()
     {
         var gameAndConnections = new Task[3];
-        gameAndConnections[0] = TotalState.RunGame();
+        gameAndConnections[0] = Controller.RunGame();
         gameAndConnections[1] = Controller.RunInput();
         gameAndConnections[2] = ManageConnections();
         await Task.WhenAll(gameAndConnections);
@@ -129,9 +129,9 @@ public class Server
                             client.Close();
                             return;
                         }
-
+                        
                         await PrepareAndWriteCompressedMessage(stream, gameSnapshot, CompressionLevel.SmallestSize);
-
+                        
                         Console.WriteLine($"Server - Player {playerId} was sent an update");
                     }
                 }
