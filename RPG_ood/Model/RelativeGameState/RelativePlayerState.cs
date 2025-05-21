@@ -1,4 +1,4 @@
-namespace RPG_ood.Model.GameSnapshot;
+namespace RPG_ood.Model.RelativeGameState;
 
 public class RelativePlayerState
 {

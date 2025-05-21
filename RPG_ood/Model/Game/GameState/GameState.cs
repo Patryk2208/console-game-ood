@@ -111,6 +111,7 @@ public class GameState
         player.Id = id;
         Players.Add(id, player);
         CurrentRoom.Players.Add(player);
+        Logs.AddPlayerLogs(id);
         MomentChangedEvent.AddObserver(id.ToString(), player);
         var possibleSpawnPositions = new List<(int, int)>();
         for(int i = 0; i < CurrentRoom.Height; ++i)
@@ -133,6 +134,7 @@ public class GameState
     {
         var player = Players[id];
         CurrentRoom.Players.Remove(player);
+        Logs.RemovePlayerLogs(id);
         //CurrentRoom.Elements[player.Pos.X, player.Pos.Y].OnStandable = true;
         //PlayerChannels.Remove(id);
         Players.Remove(id);

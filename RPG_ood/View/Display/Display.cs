@@ -4,7 +4,7 @@ using RPG_ood.Model;
 using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game;
 using RPG_ood.Model.Game.GameState;
-using RPG_ood.Model.GameSnapshot;
+using RPG_ood.Model.RelativeGameState;
 
 namespace RPG_ood.View.Display;
 
@@ -286,15 +286,15 @@ public class Display
         }
     }
 
-    public void DisplayLog(Logs logs)
+    public void DisplayLog(RelativeLogs logs)
     {
-        var coursorXpos = 5;
-        Console.SetCursorPosition(Width + 2, coursorXpos);
-        var blank = new StringBuilder();
-        foreach (var log in logs.LogMessgaes)
+        var cursorYpos = (int)(Width * 0.6);
+        var cursorXpos = Height + 3;
+        Console.SetCursorPosition(cursorYpos, cursorXpos);
+        foreach (var log in logs.LogMessages)
         {
             Console.Write(log);
-            Console.SetCursorPosition(Width + 2, ++coursorXpos);
+            Console.SetCursorPosition(cursorYpos, ++cursorXpos);
         }
     }
 }

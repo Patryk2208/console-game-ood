@@ -1,13 +1,10 @@
 using RPG_ood.Communication.Snapshots;
 using RPG_ood.Map;
-using RPG_ood.Model.Beings;
-using RPG_ood.Model.Game;
 using RPG_ood.Model.Game.Beings;
 using RPG_ood.Model.Game.GameState;
 using RPG_ood.Model.Game.Items;
-using RPG_ood.Model.Items;
 
-namespace RPG_ood.Model.GameSnapshot;
+namespace RPG_ood.Model.RelativeGameState;
 
 public class RelativeRoomState
 {

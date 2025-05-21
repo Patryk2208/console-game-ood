@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using RPG_ood.App;
 using RPG_ood.Model.Game;
-using RPG_ood.Model.GameSnapshot;
+using RPG_ood.Model.RelativeGameState;
 
 namespace RPG_ood.View.Display;
 
@@ -23,6 +23,7 @@ public class View(RelativeGameState relativeGameState, MvcSynchronization sync)
         
         displaySystem.DisplayFrame(State);
         displaySystem.DisplayMapInfo(State);
+        displaySystem.DisplayLog(State.CurrentRelativeLogs);
 
         displaySystem.RefreshRoom(State.CurrentRelativeRoom);
         displaySystem.RefreshItems(State.CurrentRelativeRoom);
@@ -33,7 +34,7 @@ public class View(RelativeGameState relativeGameState, MvcSynchronization sync)
         displaySystem.RefreshPlayerInfo(State);
 
         displaySystem.RefreshPlayers(State);
-
+        
         displaySystem.DisplayGame();
     }
 

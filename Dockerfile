@@ -18,4 +18,5 @@ RUN dotnet publish "./RPG_ood.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "RPG_ood.dll"]
+EXPOSE 5555/tcp
+ENTRYPOINT ["dotnet", "RPG_ood.dll", "--server", "5555"]

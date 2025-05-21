@@ -1,30 +1,51 @@
-namespace RPG_ood.Model.Game;
+using RPG_ood.Model.Game.Beings;
+
+namespace RPG_ood.Model.Game.GameState;
 
 public class Logs
 {
     private const int LogCapacity = 10;
-    private const int logLength = 80;
-    public Queue<string> LogMessgaes { get; set; } = new(LogCapacity);
+    private const int LogLength = 80;
+    public Dictionary<long, Queue<string>> LogMessages { get; set; } = new();
 
-    public void AddLogMessage(string message)
+    public void AddPlayerLogs(long playerId)
     {
-        if (message.Length < logLength)
+        LogMessages.TryAdd(playerId, new Queue<string>(LogCapacity));
+    }
+
+    public void RemovePlayerLogs(long playerId)
+    {
+        LogMessages.Remove(playerId);
+    }
+
+    public void AddCommonLogMessage(string message)
+    {
+        foreach (var receiver in LogMessages.Keys)
         {
-            message = message.PadRight(logLength);
+            AddLogMessage(receiver, message);
         }
-        else if (message.Length > logLength)
+    }
+    
+    public void AddLogMessage(long playerId, string message)
+    {
+        if (!LogMessages.ContainsKey(playerId))
         {
-            message = message[..logLength];
+            return;
         }
-        if (LogMessgaes.Count < LogCapacity)
+        if (message.Length < LogLength)
         {
-            LogMessgaes.Enqueue(message);
+            message = message.PadRight(LogLength);
         }
-        else
+        else if (message.Length > LogLength)
         {
-            LogMessgaes.Dequeue();
-            LogMessgaes.Enqueue(message);
+            message = message[..LogLength];
         }
+        if (LogMessages[playerId].Count >= LogCapacity)
+        {
+            LogMessages[playerId].Dequeue();
+        }
+
+        LogMessages[playerId].Enqueue(message);
     }
     
 }

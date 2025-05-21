@@ -9,7 +9,7 @@ using System.Threading.Channels;
 using RPG_ood.Commands;
 using RPG_ood.Communication.Snapshots;
 using RPG_ood.Input;
-using RPG_ood.Model.GameSnapshot;
+using RPG_ood.Model.RelativeGameState;
 using RPG_ood.View.Display;
 
 namespace RPG_ood.App.Client;
@@ -84,6 +84,7 @@ public class Client
                 StateModel.LastSyncMoment = receivedSnapshot.SyncMoment;
                 StateModel.Player = receivedSnapshot.Player;
                 StateModel.CurrentRelativeRoom = new RelativeRoomState(receivedSnapshot.CurrentRoomSnapshot);
+                StateModel.CurrentRelativeLogs = new RelativeLogs(receivedSnapshot.Logs);
 
                 View.Refresh();
                 StateModel.Sync.GameMutex.ReleaseMutex();

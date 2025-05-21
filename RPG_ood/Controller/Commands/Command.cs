@@ -141,7 +141,7 @@ public class EquipCommand : Command
         item.Pos = item.Pos with { X = -1, Y = -1 };
         p.PickUpItem(item);
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -156,7 +156,7 @@ public class ThrowCommand : Command
         var newMessage = $"{p.Name} dropped {p.Eq.Eq[p.Eq.EqPointer].Name}";
         p.DropItem();
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -174,7 +174,7 @@ public class ThrowAllCommand : Command
             p.DropItem();
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -243,7 +243,7 @@ public class PutInRightHandCommand : Command
             p.TryTakeItem(p.Bd, "RightHand");
         }
 
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -268,7 +268,7 @@ public class PutInLeftHandCommand : Command
             p.TryTakeItem(p.Bd, "LeftHand");
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -291,7 +291,7 @@ public class UseFromLeftHandCommand : Command
             newMessage = "Invalid Input: No item in LeftHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -314,7 +314,7 @@ public class UseFromRightHandCommand : Command
             newMessage = "Invalid Input: No item in RightHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -338,6 +338,8 @@ public class NormalAttackRightHandCommand : Command
                 value.UsedItem!.AcceptAttack(normalAttack);
                 normalAttack.Attack();
                 normalAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -362,7 +364,7 @@ public class NormalAttackRightHandCommand : Command
             newMessage = "Invalid Input: No item in RightHand";
         }
            
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -386,6 +388,8 @@ public class NormalAttackLeftHandCommand : Command
                 value.UsedItem!.AcceptAttack(normalAttack);
                 normalAttack.Attack();
                 normalAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -411,7 +415,7 @@ public class NormalAttackLeftHandCommand : Command
         }
 
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -435,6 +439,8 @@ public class SneakAttackRightHandCommand : Command
                 value.UsedItem!.AcceptAttack(sneakAttack);
                 sneakAttack.Attack();
                 sneakAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -459,7 +465,7 @@ public class SneakAttackRightHandCommand : Command
             newMessage = "Invalid Input: No item in RightHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -483,6 +489,8 @@ public class SneakAttackLeftHandCommand : Command
                 value.UsedItem!.AcceptAttack(sneakAttack);
                 sneakAttack.Attack();
                 sneakAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -507,7 +515,7 @@ public class SneakAttackLeftHandCommand : Command
             newMessage = "Invalid Input: No item in LeftHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -531,6 +539,8 @@ public class MagicAttackRightHandCommand : Command
                 value.UsedItem!.AcceptAttack(magicAttack);
                 magicAttack.Attack();
                 magicAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -555,7 +565,7 @@ public class MagicAttackRightHandCommand : Command
             newMessage = "Invalid Input: No item in RightHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 
@@ -579,6 +589,8 @@ public class MagicAttackLeftHandCommand : Command
                 value.UsedItem!.AcceptAttack(magicAttack);
                 magicAttack.Attack();
                 magicAttack.CounterAttack();
+                state.Logs.AddCommonLogMessage(newMessage);
+                return;
             }
             else
             {
@@ -603,7 +615,7 @@ public class MagicAttackLeftHandCommand : Command
             newMessage = "Invalid Input: No item in LeftHand";
         }
             
-        state.Logs.AddLogMessage(newMessage);
+        state.Logs.AddLogMessage(PlayerId, newMessage);
     }
 }
 

@@ -5,7 +5,6 @@ using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game;
 using RPG_ood.Model.Game.Beings;
 using RPG_ood.Model.Game.GameState;
-using RPG_ood.Model.GameSnapshot;
 
 namespace RPG_ood.Communication.Snapshots;
 
@@ -16,20 +15,23 @@ public class GameSnapshot
     public long SyncMoment { get; set; }
     public Player Player { get; private set; }
     public RoomSnapshot CurrentRoomSnapshot { get; private set; }
+    public LogsSnapshot Logs { get; private set; }
 
-    public GameSnapshot(GameState gameState, long playerID)
+    public GameSnapshot(GameState gameState, long playerId)
     {
         SyncMoment = gameState.CurrentMoment;
-        Player = gameState.Players[playerID];
+        Player = gameState.Players[playerId];
         CurrentRoomSnapshot = new RoomSnapshot(gameState.CurrentRoom);
+        Logs = new LogsSnapshot(gameState.Logs.LogMessages[playerId]);
     }
 
     [JsonConstructor]
-    public GameSnapshot(long syncMoment, Player player, RoomSnapshot currentRoomSnapshot)
+    public GameSnapshot(long syncMoment, Player player, RoomSnapshot currentRoomSnapshot, LogsSnapshot logs)
     {
         SyncMoment = syncMoment;
         Player = player;
         CurrentRoomSnapshot = currentRoomSnapshot;
+        Logs = logs;
     }
 }
 
@@ -43,8 +45,9 @@ public class GameSnapshotJsonConverter : JsonConverter<GameSnapshot>
             var syncMoment = root.GetProperty("SyncMoment").GetInt64();
             var player = root.GetProperty("Player").Deserialize<Player>();
             var currentRoomSnapshot = root.GetProperty("CurrentRoomSnapshot").Deserialize<RoomSnapshot>();
+            var logs = root.GetProperty("Logs").Deserialize<LogsSnapshot>();
 
-            return new GameSnapshot(syncMoment, player, currentRoomSnapshot);
+            return new GameSnapshot(syncMoment, player, currentRoomSnapshot, logs);
         }
     }
 
@@ -56,6 +59,8 @@ public class GameSnapshotJsonConverter : JsonConverter<GameSnapshot>
         JsonSerializer.Serialize(writer, value.Player, options);
         writer.WritePropertyName("CurrentRoomSnapshot");
         JsonSerializer.Serialize(writer, value.CurrentRoomSnapshot, options);
+        writer.WritePropertyName("Logs");
+        JsonSerializer.Serialize(writer, value.Logs, options);
         writer.WriteEndObject();
     }
 }

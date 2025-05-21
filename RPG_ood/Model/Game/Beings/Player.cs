@@ -5,7 +5,7 @@ using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game.Attributes;
 using RPG_ood.Model.Game.GameState;
 using RPG_ood.Model.Game.Items;
-using RPG_ood.Model.GameSnapshot;
+using RPG_ood.Model.RelativeGameState;
 using RPG_ood.View;
 using Attributes_Attribute = RPG_ood.Model.Game.Attributes.Attribute;
 
