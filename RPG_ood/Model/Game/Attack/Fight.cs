@@ -10,6 +10,4 @@ public abstract class Fight
     public abstract void VisitOtherUsable(IUsable usedWeapon);
 
     public abstract void Attack();
-
-    public abstract void CounterAttack();
 }

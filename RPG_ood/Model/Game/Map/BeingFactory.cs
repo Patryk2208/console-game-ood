@@ -1,7 +1,6 @@
-using RPG_ood.Model.Beings;
 using RPG_ood.Model.Game.Beings;
 
-namespace RPG_ood.Map;
+namespace RPG_ood.Model.Game.Map;
 
 public interface IBeingFactory
 {
@@ -11,13 +10,22 @@ public interface IBeingFactory
 public class EnemyFactory (Random seed) : IBeingFactory
 {
     private Random _seed { get; } = seed;
-    private List<Func<IEnemy>> CreateFunctions { get; set; } = 
+    private List<Func<MovementStrategy, IEnemy>> CreateFunctions { get; set; } = 
     [
-        () => new Orc(),
-        () => new Giant()
+        (MovementStrategy strategy) => new Orc(strategy),
+        (MovementStrategy strategy) => new Giant(strategy)
+    ];
+
+    private List<MovementStrategy> PossibleStrategies { get; set; } =
+    [
+        new CalmMovementStrategy(),
+        new RoamingMovementStrategy(),
+        new AggressiveMovementStrategy(),
+        new ShyMovementStrategy()
     ];
     public IBeing CreateBeing()
     {
-        return CreateFunctions[_seed.Next(CreateFunctions.Count)].Invoke();
+        return CreateFunctions[_seed.Next(CreateFunctions.Count)]
+            .Invoke(PossibleStrategies[_seed.Next(PossibleStrategies.Count)]);
     }
 }

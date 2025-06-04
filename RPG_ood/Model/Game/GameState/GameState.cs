@@ -15,8 +15,6 @@ namespace RPG_ood.Model.Game.GameState;
 public class GameState
 {
     public Dictionary<long, Player> Players { get; set; }
-    private Dictionary<long, Channel<Communication.Snapshots.GameSnapshot?>> PlayerChannels { get; set; }
-    public Mutex ConnectionMutex { get; set; }
     public World World { get; protected init; }
     public RPG_ood.Map.Map CurrentMap { get; protected set; }
     public Room CurrentRoom { get; protected set; }
@@ -29,16 +27,13 @@ public class GameState
     
     
     private MvcSynchronization Sync { get; init; }
-    public GameState(MvcSynchronization sync,
-        Dictionary<long, Channel<Communication.Snapshots.GameSnapshot?>> playerChannels, Mutex connectionMutex)
+    public GameState(MvcSynchronization sync)
     {
         Sync = sync;
         MomentChangedEvent = new MomentChangedEvent();
         MomentDurationMilliseconds = 100;
         Logs = new Logs();
         Players = new();
-        PlayerChannels = playerChannels;
-        ConnectionMutex = connectionMutex;
         World = new World();
         World.Maps.Add("Main", new RPG_ood.Map.Map("Main", 1));
         CurrentMap = World.Maps["Main"];
@@ -55,11 +50,6 @@ public class GameState
         World.Maps["Main"].Rooms[0] = builder.GetResult();
         CurrentRoom = World.Maps["Main"].Rooms[0];
         CurrentRoom.RoomInstruction = instructionBuilder.GetResult();
-        foreach (var p in Players.Values)
-        {
-            CurrentRoom.Players.Add(p);
-            MomentChangedEvent.AddObserver(p.Name, p);
-        }
         foreach (var being in CurrentRoom.Beings)
         {
             MomentChangedEvent.AddObserver(being.Name, being);
@@ -94,7 +84,7 @@ public class GameState
         Players.Add(id, player);
         CurrentRoom.Players.Add(player);
         Logs.AddPlayerLogs(id);
-        MomentChangedEvent.AddObserver(id.ToString(), player);
+        MomentChangedEvent.AddObserver(id.ToString(), player, true);
         var possibleSpawnPositions = new List<(int, int)>();
         for(int i = 0; i < CurrentRoom.Height; ++i)
         {
@@ -108,8 +98,7 @@ public class GameState
         }
         var spawnCoords = possibleSpawnPositions[new Random().Next(possibleSpawnPositions.Count)];
         Players[id].Pos = new Position(spawnCoords.Item1, spawnCoords.Item2);
-        var channel = Channel.CreateUnbounded<Communication.Snapshots.GameSnapshot?>();
-        PlayerChannels.Add(id, channel);
+        CurrentRoom.Elements[Players[id].Pos.X, Players[id].Pos.Y].OnStandable = false;
     }
 
     public void RemovePlayer(long id)
@@ -117,22 +106,7 @@ public class GameState
         var player = Players[id];
         CurrentRoom.Players.Remove(player);
         Logs.RemovePlayerLogs(id);
-        //CurrentRoom.Elements[player.Pos.X, player.Pos.Y].OnStandable = true;
-        //PlayerChannels.Remove(id);
         Players.Remove(id);
         MomentChangedEvent.RemoveObserver(player.Name, player);
-    }
-    
-    public async Task BroadcastStates()
-    {
-        foreach (var channel in PlayerChannels)
-        {
-            Communication.Snapshots.GameSnapshot? relativeState = null;
-            if (Players.ContainsKey(channel.Key))
-            {
-                relativeState = new Communication.Snapshots.GameSnapshot(this, channel.Key);  
-            }
-            await channel.Value.Writer.WriteAsync(relativeState);
-        }
     }
 }

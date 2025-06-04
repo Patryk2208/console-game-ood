@@ -36,8 +36,8 @@ public class Server
         Mvc = new MvcSynchronization();
         Channels = new ();
         ConnectionMutex = new Mutex();
-        TotalState = new GameState(Mvc, Channels, ConnectionMutex);
-        Controller = new Input.Input(TotalState, Mvc, CommandsChannel);
+        TotalState = new GameState(Mvc);
+        Controller = new Input.Input(TotalState, Mvc, CommandsChannel, Channels, ConnectionMutex);
         Port = port;
         ConnectedClients = new();
         ConnectedClientIds = new();
@@ -78,9 +78,11 @@ public class Server
                 }
                 var id = GenerateNewPlayerId(newClient);
                 ConnectedClientIds.Add(id);
+                
                 Mvc.GameMutex.WaitOne();
-                TotalState.AddPlayer(id);
+                Controller.AddPlayer(id);
                 Mvc.GameMutex.ReleaseMutex();
+                
                 var snapshots = RunServerToClientConnection(id, newClient, cts);
                 var commands = RunClientToServerInput(id, newClient, cts);
                 ConnectedClients.Add(id, (snapshots, commands));
@@ -121,11 +123,13 @@ public class Server
                         if (gameSnapshot == null)
                         {
                             await cts.CancelAsync();
+                            
                             ConnectionMutex.WaitOne();
                             ConnectedClients.Remove(playerId);
                             ConnectedClientIds.Remove(playerId);
                             Channels.Remove(playerId);
                             ConnectionMutex.ReleaseMutex();
+                            
                             client.Close();
                             return;
                         }
@@ -149,6 +153,7 @@ public class Server
     }
     private async Task PrepareAndWriteCompressedMessage(NetworkStream stream, GameSnapshot gameSnapshot, CompressionLevel compressionLevel)
     {
+        var json = JsonSerializer.Serialize(gameSnapshot);
         var serializedJson = JsonSerializer.SerializeToUtf8Bytes(gameSnapshot);
         var preCompressedLength = serializedJson.Length;
         using var ms = new MemoryStream();

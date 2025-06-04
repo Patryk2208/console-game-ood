@@ -1,18 +1,18 @@
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using RPG_ood.Map;
-using RPG_ood.Model.Game;
-using RPG_ood.Model.Game.Beings;
 using RPG_ood.Model.Game.GameState;
 using RPG_ood.View;
 
-namespace RPG_ood.Model.Beings;
+namespace RPG_ood.Model.Game.Beings;
 
 public interface IEnemy : INpc
 {
     public int Health { get; set; }
+    public int InitialHealth { get; set; }
     public int Armor { get; set; }
     public int Damage { get; set; }
+    [JsonIgnore]
+    public List<Func<Room, bool>> PossibleMovements { get; }
     IEnemy? IBeing.CanFight()
     {
         return this;
@@ -26,6 +26,7 @@ public abstract class Enemy : IEnemy
     public string Name { get; init; }
     public bool IsDead { get; set; }
     public bool WasAttacked { get; set; }
+    public MovementStrategy Strategy { get; set; }
     [JsonIgnore]
     public MomentChangedEvent MomentChangedEvent { get; init; }
     [JsonIgnore]
@@ -33,9 +34,7 @@ public abstract class Enemy : IEnemy
     [JsonIgnore]
     public int MomentInterval {get; set;}
     [JsonIgnore]
-    private Random _random { get; set; } = new();
-    [JsonIgnore]
-    private List<Action<Room>> PossibleMovements { get; set; }
+    public List<Func<Room, bool>> PossibleMovements { get; set; }
     protected Enemy()
     {
         PossibleMovements =
@@ -47,7 +46,7 @@ public abstract class Enemy : IEnemy
         ];
         MomentChangedEvent = null!; //Todo
     }
-    void IObserver.Update(GameState? state, long id)
+    void IObserver.Update(GameState.GameState? state, long id)
     {
         if (state == null)
         {
@@ -61,17 +60,27 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = -1, Y = -1 };
             return;
         }
-        WasAttacked = false;
         if (MomentPassed % MomentInterval == 0)
         {
-            Wander(state!.CurrentRoom);
+            AlterStrategy();
+            Strategy.Wander(state!.CurrentRoom, this);
+        }
+        WasAttacked = false;
+    }
+
+    private void AlterStrategy()
+    {
+        if (Health < InitialHealth && Health >= InitialHealth * 0.5)
+        {
+            Strategy = new AggressiveMovementStrategy();
+        }
+        else if (Health < InitialHealth * 0.5)
+        {
+            Strategy = new ShyMovementStrategy();
         }
     }
-    public void Wander(Room room)
-    {
-        PossibleMovements[_random.Next(PossibleMovements.Count)].Invoke(room);
-    }
-    protected void MoveUp(Room room)
+    
+    protected bool MoveUp(Room room)
     {
         if (Pos.X - 1 >= 0 && room.Elements[Pos.X - 1, Pos.Y].OnStandable)
         {
@@ -79,9 +88,12 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = Pos.X - 1, Y = Pos.Y };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
             //newMessage = $"{P.Name} Moved Up";
+            return true;
         }
+        return false;
     }
-    protected void MoveDown(Room room)
+
+    protected bool MoveDown(Room room)
     {
         if (Pos.X + 1 < room.Height && room.Elements[Pos.X + 1, Pos.Y].OnStandable)
         {
@@ -89,10 +101,12 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = Pos.X + 1, Y = Pos.Y };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
             //newMessage = $"{P.Name} Moved Up";
+            return true;
         }
+        return false;
     }
     
-    protected void MoveLeft(Room room)
+    protected bool MoveLeft(Room room)
     {
         if (Pos.Y - 1 >= 0 && room.Elements[Pos.X, Pos.Y - 1].OnStandable)
         {
@@ -100,10 +114,12 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = Pos.X, Y = Pos.Y - 1 };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
             //newMessage = $"{P.Name} Moved Up";
+            return true;
         }
+        return false;
     }
 
-    protected void MoveRight(Room room)
+    protected bool MoveRight(Room room)
     {
         if (Pos.Y + 1 < room.Width && room.Elements[Pos.X, Pos.Y + 1].OnStandable)
         {
@@ -111,11 +127,15 @@ public abstract class Enemy : IEnemy
             Pos = Pos with { X = Pos.X, Y = Pos.Y + 1 };
             room.Elements[Pos.X, Pos.Y].OnStandable = false;
             //newMessage = $"{P.Name} Moved Up";
+            return true;
         }
+        return false;
     }
     public int Health { get; set; }
+    public int InitialHealth { get; set; }
     public int Armor { get; set; }
     public int Damage { get; set; }
+
     public void ReceiveDamage(int damage)
     {
         Health -= damage;
@@ -140,13 +160,14 @@ public abstract class Enemy : IEnemy
 public class Orc : Enemy
 {
 
-    public Orc()
+    public Orc(MovementStrategy strategy)
     {
         Name = "Orc";
-        MomentInterval = 8;
-        Health = 100;
+        MomentInterval = 5;
+        InitialHealth = Health = 100;
         Armor = 0;
         Damage = 30;
+        Strategy = strategy;
     }
 
     public override void AcceptView(IViewGenerator generator)
@@ -158,13 +179,14 @@ public class Orc : Enemy
 public class Giant : Enemy
 {
 
-    public Giant()
+    public Giant(MovementStrategy strategy)
     {
         Name = "Giant";
-        MomentInterval = 15;
-        Health = 200;
+        MomentInterval = 10;
+        InitialHealth = Health = 200;
         Armor = 50;
         Damage = 60;
+        Strategy = strategy;
     }
 
     public override void AcceptView(IViewGenerator generator)

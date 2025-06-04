@@ -21,11 +21,6 @@ public abstract class PlayerEnemyFight(Player attacker, IEnemy defender, IUsable
     {
         Defender.ReceiveDamage(AttackDamage);
     }
-
-    public override void CounterAttack()
-    {
-        Attacker.ReceiveDamage(CounterAttackDamage);
-    }
 }
 
 public class NormalPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable weapon) : PlayerEnemyFight(attacker, defender, weapon)
@@ -38,10 +33,6 @@ public class NormalPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable w
         AttackDamage = (int)(AttackDamage * 
                             (((float)Attacker.Attr["Aggression"].Value / Attacker.Attr["Aggression"].MaxValue) + 0.5));
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = (Attacker.Attr["Power"].Value + Attacker.Attr["Luck"].Value) / 2;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
@@ -52,30 +43,18 @@ public class NormalPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable w
         AttackDamage = (int)(AttackDamage * 
                             (((float)Attacker.Attr["Luck"].Value / Attacker.Attr["Luck"].MaxValue) + 0.5));
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = (Attacker.Attr["Agility"].Value + Attacker.Attr["Luck"].Value) / 2;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
     {
         AttackDamage = 1;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = (Attacker.Attr["Agility"].Value + Attacker.Attr["Luck"].Value) / 2;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)
     {
         AttackDamage = Weapon.Damage;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = Attacker.Attr["Agility"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 }
 
@@ -90,10 +69,6 @@ public class SneakPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable we
                             (((float)Attacker.Attr["Aggression"].Value / Attacker.Attr["Aggression"].MaxValue) + 0.5));
         AttackDamage /= 2;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = Attacker.Attr["Power"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
@@ -105,28 +80,18 @@ public class SneakPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable we
                             (((float)Attacker.Attr["Luck"].Value / Attacker.Attr["Luck"].MaxValue) + 0.5));
         AttackDamage *= 2;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = Attacker.Attr["Agility"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
     {
         AttackDamage = 1;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = 0;
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)
     {
         AttackDamage = Weapon.Damage;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = 0;
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 }
 
@@ -136,20 +101,12 @@ public class MagicPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable we
     {
         AttackDamage = 1;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = Attacker.Attr["Luck"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitLightWeapon(LightWeapon usedWeapon)
     {
         AttackDamage = 1;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = Attacker.Attr["Luck"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitMagicalWeapon(MagicalWeapon usedWeapon)
@@ -158,19 +115,11 @@ public class MagicPlayerEnemyAttack(Player attacker, IEnemy defender, IUsable we
         AttackDamage = (int)(AttackDamage * 
                             (((float)Attacker.Attr["Wisdom"].Value / Attacker.Attr["Wisdom"].MaxValue) + 0.5));
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-        
-        var defence = Attacker.Attr["Wisdom"].Value * 2;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 
     public override void VisitOtherUsable(IUsable usedWeapon)
     {
         AttackDamage = Weapon.Damage;
         AttackDamage = Math.Max(AttackDamage - Defender.Armor, 0);
-
-        var defence = Attacker.Attr["Luck"].Value;
-        defence += Attacker.Bd.GetArmor();
-        CounterAttackDamage = Math.Max(CounterAttackDamage - defence, 0);
     }
 }

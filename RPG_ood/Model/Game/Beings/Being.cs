@@ -24,5 +24,5 @@ public interface IBeing : IMappable, IObserver
 
 public interface INpc : IBeing
 {
-    public void Wander(Room room);
+    public MovementStrategy Strategy { get; set; }
 }

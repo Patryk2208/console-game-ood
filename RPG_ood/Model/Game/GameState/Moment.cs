@@ -4,9 +4,16 @@ public abstract class CustomEvent
 {
     protected abstract List<(string, IObserver)> Observers { get; set; }
 
-    public void AddObserver(string name, IObserver observer)
+    public void AddObserver(string name, IObserver observer, bool toFront = false)
     {
-        Observers.Add((name, observer));
+        if (toFront)
+        {
+            Observers.Insert(0, (name, observer));
+        }
+        else
+        {
+            Observers.Add((name, observer));
+        }
     }
 
     public void RemoveObserver(string name, IObserver observer)

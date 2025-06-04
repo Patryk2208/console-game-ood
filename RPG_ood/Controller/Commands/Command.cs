@@ -337,7 +337,6 @@ public class NormalAttackRightHandCommand : Command
                 Fight normalAttack = new NormalPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(normalAttack);
                 normalAttack.Attack();
-                normalAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -355,7 +354,6 @@ public class NormalAttackRightHandCommand : Command
                     Fight normalAttack = new NormalPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(normalAttack);
                     normalAttack.Attack();
-                    normalAttack.CounterAttack();
                 }
             }
         }
@@ -387,7 +385,6 @@ public class NormalAttackLeftHandCommand : Command
                 Fight normalAttack = new NormalPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(normalAttack);
                 normalAttack.Attack();
-                normalAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -405,7 +402,6 @@ public class NormalAttackLeftHandCommand : Command
                     Fight normalAttack = new NormalPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(normalAttack);
                     normalAttack.Attack();
-                    normalAttack.CounterAttack();
                 }
             }
         }
@@ -438,7 +434,6 @@ public class SneakAttackRightHandCommand : Command
                 Fight sneakAttack = new SneakPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(sneakAttack);
                 sneakAttack.Attack();
-                sneakAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -456,7 +451,6 @@ public class SneakAttackRightHandCommand : Command
                     Fight sneakAttack = new SneakPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(sneakAttack);
                     sneakAttack.Attack();
-                    sneakAttack.CounterAttack();
                 }
             }
         }
@@ -488,7 +482,6 @@ public class SneakAttackLeftHandCommand : Command
                 Fight sneakAttack = new SneakPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(sneakAttack);
                 sneakAttack.Attack();
-                sneakAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -506,7 +499,6 @@ public class SneakAttackLeftHandCommand : Command
                     Fight sneakAttack = new SneakPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(sneakAttack);
                     sneakAttack.Attack();
-                    sneakAttack.CounterAttack();
                 }
             }
         }
@@ -538,7 +530,6 @@ public class MagicAttackRightHandCommand : Command
                 Fight magicAttack = new MagicPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(magicAttack);
                 magicAttack.Attack();
-                magicAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -556,7 +547,6 @@ public class MagicAttackRightHandCommand : Command
                     Fight magicAttack = new MagicPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(magicAttack);
                     magicAttack.Attack();
-                    magicAttack.CounterAttack();
                 }
             }
         }
@@ -588,7 +578,6 @@ public class MagicAttackLeftHandCommand : Command
                 Fight magicAttack = new MagicPlayersAttack(p, rivalPlayer, value.UsedItem!);
                 value.UsedItem!.AcceptAttack(magicAttack);
                 magicAttack.Attack();
-                magicAttack.CounterAttack();
                 state.Logs.AddCommonLogMessage(newMessage);
                 return;
             }
@@ -606,7 +595,6 @@ public class MagicAttackLeftHandCommand : Command
                     Fight magicAttack = new MagicPlayerEnemyAttack(p, enemy, value.UsedItem!);
                     value.UsedItem!.AcceptAttack(magicAttack);
                     magicAttack.Attack();
-                    magicAttack.CounterAttack();
                 }
             }
         }

@@ -12,14 +12,19 @@ public class Input
     private Channel<Command> CommandsChannel { get; set; }
     private bool WasStateChangedBetweenMoments { get; set; }
     private SemaphoreSlim ResponsivenessSemaphore { get; set; }
+    private Dictionary<long, Channel<Communication.Snapshots.GameSnapshot?>> PlayerChannels { get; set; }
+    private Mutex ConnectionMutex { get; set; }
 
-    public Input(GameState state, MvcSynchronization sync, Channel<Command> commandsChannel)
+    public Input(GameState state, MvcSynchronization sync, Channel<Command> commandsChannel,
+        Dictionary<long, Channel<Communication.Snapshots.GameSnapshot?>> playerChannels, Mutex connectionMutex)
     {
         State = state;
         Sync = sync;
         CommandsChannel = commandsChannel;
         WasStateChangedBetweenMoments = false;
         ResponsivenessSemaphore = new SemaphoreSlim(0, 1);
+        PlayerChannels = playerChannels;
+        ConnectionMutex = connectionMutex;
     }
     public async Task RunGame()
     {
@@ -32,16 +37,16 @@ public class Input
             {
                 await Task.Delay(State.MomentDurationMilliseconds);
 
-                State.ConnectionMutex.WaitOne();
+                ConnectionMutex.WaitOne();
                 Sync.GameMutex.WaitOne();
 
-                await State.BroadcastStates();
+                await BroadcastStates();
 
                 State.MomentChangedEvent.NotifyObservers(State, 0);
                 ++State.CurrentMoment;
 
                 Sync.GameMutex.ReleaseMutex();
-                State.ConnectionMutex.ReleaseMutex();
+                ConnectionMutex.ReleaseMutex();
             }
 
             cts.Cancel();
@@ -64,16 +69,16 @@ public class Input
 
                 await ResponsivenessSemaphore.WaitAsync();
 
-                State.ConnectionMutex.WaitOne();
+                ConnectionMutex.WaitOne();
                 Sync.GameMutex.WaitOne();
                 if (WasStateChangedBetweenMoments)
                 {
                     WasStateChangedBetweenMoments = false;
-                    await State.BroadcastStates();
+                    await BroadcastStates();
                 }
 
                 Sync.GameMutex.ReleaseMutex();
-                State.ConnectionMutex.ReleaseMutex();
+                ConnectionMutex.ReleaseMutex();
             }
         }
         catch (Exception e)
@@ -107,6 +112,26 @@ public class Input
         {
             Console.WriteLine(e);
             throw;
+        }
+    }
+
+    public void AddPlayer(long playerId)
+    {
+        State.AddPlayer(playerId);
+        var channel = Channel.CreateUnbounded<Communication.Snapshots.GameSnapshot?>();
+        PlayerChannels.Add(playerId, channel);
+    }
+    
+    private async Task BroadcastStates()
+    {
+        foreach (var channel in PlayerChannels)
+        {
+            Communication.Snapshots.GameSnapshot? relativeState = null;
+            if (State.Players.ContainsKey(channel.Key))
+            {
+                relativeState = new Communication.Snapshots.GameSnapshot(State, channel.Key);  
+            }
+            await channel.Value.Writer.WriteAsync(relativeState);
         }
     }
 }

@@ -9,7 +9,6 @@ public abstract class PlayersFight(Player attacker, Player defender, IUsable wea
     protected Player Defender { get; set; } = defender;
     protected IUsable Weapon { get; set; } = weapon;
     protected int AttackDamage { get; set; } = 0;
-    protected int CounterAttackDamage { get; set; } = 0;
     
     public abstract override void VisitHeavyWeapon(HeavyWeapon usedWeapon);
     public abstract override void VisitLightWeapon(LightWeapon usedWeapon);
@@ -19,11 +18,6 @@ public abstract class PlayersFight(Player attacker, Player defender, IUsable wea
     public override void Attack()
     {
         Defender.ReceiveDamage(AttackDamage);
-    }
-
-    public override void CounterAttack()
-    {
-        Attacker.ReceiveDamage(CounterAttackDamage);
     }
 
 }
