@@ -27,6 +27,7 @@ public abstract class Enemy : IEnemy
     public bool IsDead { get; set; }
     public bool WasAttacked { get; set; }
     public MovementStrategy Strategy { get; set; }
+    private StrategyManager StrategyManager { get; set; }
     [JsonIgnore]
     public MomentChangedEvent MomentChangedEvent { get; init; }
     [JsonIgnore]
@@ -44,6 +45,7 @@ public abstract class Enemy : IEnemy
             MoveLeft,
             MoveRight
         ];
+        StrategyManager = new StrategyManager();
         MomentChangedEvent = null!; //Todo
     }
     void IObserver.Update(GameState.GameState? state, long id)
@@ -62,22 +64,15 @@ public abstract class Enemy : IEnemy
         }
         if (MomentPassed % MomentInterval == 0)
         {
-            AlterStrategy();
-            Strategy.Wander(state!.CurrentRoom, this);
+            Strategy = StrategyManager.GetStrategy(Health / (float)InitialHealth, Strategy);
+            ExecuteStrategy(state!.CurrentRoom, this);
         }
         WasAttacked = false;
     }
 
-    private void AlterStrategy()
+    private void ExecuteStrategy(Room room, IEnemy enemy)
     {
-        if (Health < InitialHealth && Health >= InitialHealth * 0.5)
-        {
-            Strategy = new AggressiveMovementStrategy();
-        }
-        else if (Health < InitialHealth * 0.5)
-        {
-            Strategy = new ShyMovementStrategy();
-        }
+        Strategy.Wander(room, enemy);
     }
     
     protected bool MoveUp(Room room)
