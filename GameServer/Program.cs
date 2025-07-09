@@ -7,29 +7,19 @@ static class Program
 {
     static async Task Main(string[] args)
     {
-        try
-        {
-            var port = ParseArgs(args);
-            Console.WriteLine($"Starting server on port {port}");
-            var s = new Server(port);
-            await s.Run();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("Usage: [port] (default: 5555)");
-            Console.WriteLine(e);
-        }
+        var s = new Server();
+        await s.Run();
     }
     
-    static int ParseArgs(string[] args)
+    /*static int ParseArgs(string[] args)
     {
         if (args.Length != 1)
         {
             throw new ArgumentException("Invalid number of arguments");
         }
-        var port = int.Parse(args[1]);
+        var port = int.Parse(args[0]);
         return port;
-    }
+    }*/
 }
 
 //Snapshot serialization/deserialization

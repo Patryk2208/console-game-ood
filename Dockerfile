@@ -1,22 +1,31 @@
-﻿FROM mcr.microsoft.com/dotnet/runtime:8.0 AS base
-USER $APP_UID
-WORKDIR /app
-
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["RPG_ood/RPG_ood.csproj", "RPG_ood/"]
-RUN dotnet restore "RPG_ood/RPG_ood.csproj"
-COPY . .
-WORKDIR "/src/RPG_ood"
-RUN dotnet build "./RPG_ood.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY ["GameServer/GameServer.csproj", "GameServer/"]
+COPY ["Model/Model.csproj", "Model/"]
+RUN dotnet restore "Model/Model.csproj"
+RUN dotnet restore "GameServer/GameServer.csproj"
+COPY ./GameServer GameServer/
+COPY ./Model Model/
+WORKDIR "/src/GameServer"
+RUN dotnet build "./GameServer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./RPG_ood.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./GameServer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-FROM base AS final
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=publish /app/publish .
-EXPOSE 5555/tcp
-ENTRYPOINT ["dotnet", "RPG_ood.dll", "--server", "5555"]
+
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1 \
+    DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+    DOTNET_NOLOGO=true \
+    PORT=7777 \
+    AGONES_SDK_GRPC_PORT=9357
+
+EXPOSE 7000-8000 9357
+
+RUN groupadd -r gs && useradd -r -g gs gs
+USER gs
+ENTRYPOINT ["dotnet", "GameServer.dll"]

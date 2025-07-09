@@ -11,4 +11,8 @@
       <ProjectReference Include="..\Model\Model.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="AgonesSDK" Version="1.50.0" />
+    </ItemGroup>
+
 </Project>

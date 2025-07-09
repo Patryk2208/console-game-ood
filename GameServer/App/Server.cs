@@ -4,6 +4,8 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading.Channels;
+using Agones;
+using Agones.Dev.Sdk;
 using GameServer.Controller;
 
 using Model;
@@ -26,8 +28,9 @@ public class Server
     private Mutex CommandMutex { get; init; }
     private const int MaxClients = 10;
     private int Port { get; set; }
+    private AgonesSDK AgonesSdk { get; init; }
     
-    public Server(int port = 5555)
+    public Server()
     {
         CommandsChannel = Channel.CreateUnbounded<Command>();
         CommandMutex = new Mutex();
@@ -36,27 +39,42 @@ public class Server
         ConnectionMutex = new Mutex();
         TotalState = new GameState(Mvc);
         Controller = new Input(TotalState, Mvc, CommandsChannel, Channels, ConnectionMutex);
-        Port = port;
+        Port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "7777");
         ConnectedClients = new();
         ConnectedClientIds = new();
+        AgonesSdk = new AgonesSDK();
     }
 
     public async Task Run()
     {
+        Console.WriteLine("Server started");
+        
         var gameAndConnections = new Task[3];
         gameAndConnections[0] = Controller.RunGame();
         gameAndConnections[1] = Controller.RunInput();
         gameAndConnections[2] = ManageConnections();
         await Task.WhenAll(gameAndConnections);
+        await AgonesSdk.ShutDownAsync();
+    }
+
+    public async Task HealthChecker()
+    {
+        while (Mvc.ShouldAllExit == false)
+        {
+            var hs = await AgonesSdk.HealthAsync();
+            await Task.Delay(3000);
+        }
     }
     
     private async Task ManageConnections()
     {
         var listener = new TcpListener(IPAddress.Any, Port);
         listener.Start();
-
+        Console.WriteLine($"Listening on port {Port}");
         try
         {
+            var status = await AgonesSdk.ReadyAsync();
+            HealthChecker();
             while (!Mvc.ShouldAllExit)
             {
                 var newClient = await listener.AcceptTcpClientAsync();
