@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Net;
 using System.Net.Sockets;
@@ -17,38 +18,32 @@ namespace GameServer.App;
 
 public class Server
 {
-    private GameState TotalState { get; init; }
     private Input Controller { get; init; }
     private MvcSynchronization Mvc { get; init; }
-    private Dictionary<long, (Task, Task)> ConnectedClients { get; init; }
-    private List<long> ConnectedClientIds { get; init; }
+    private ConcurrentDictionary<long, ClientContext> ConnectedClients { get; init; }
     private Mutex ConnectionMutex { get; init; }
-    private Dictionary<long, Channel<GameSnapshot?>> Channels { get; init; }
+    private ConcurrentDictionary<long, Channel<GameSnapshot?>> Channels { get; init; }
     private Channel<Command> CommandsChannel { get; init; }
-    private Mutex CommandMutex { get; init; }
-    private const int MaxClients = 10;
     private int Port { get; set; }
     private AgonesSDK AgonesSdk { get; init; }
-    
+    private long PlayerCapacity { get; set; }
+
     public Server()
     {
         CommandsChannel = Channel.CreateUnbounded<Command>();
-        CommandMutex = new Mutex();
-        Mvc = new MvcSynchronization();
-        Channels = new ();
+        Channels = new ConcurrentDictionary<long, Channel<GameSnapshot?>>();
         ConnectionMutex = new Mutex();
-        TotalState = new GameState(Mvc);
-        Controller = new Input(TotalState, Mvc, CommandsChannel, Channels, ConnectionMutex);
+        Mvc = new MvcSynchronization();
+        Controller = new Input(Mvc, CommandsChannel, Channels, ConnectionMutex);
         Port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "7777");
-        ConnectedClients = new();
-        ConnectedClientIds = new();
+        ConnectedClients = new ConcurrentDictionary<long, ClientContext>();
         AgonesSdk = new AgonesSDK();
     }
 
     public async Task Run()
     {
         Console.WriteLine("Server started");
-        
+
         var gameAndConnections = new Task[3];
         gameAndConnections[0] = Controller.RunGame();
         gameAndConnections[1] = Controller.RunInput();
@@ -57,15 +52,15 @@ public class Server
         await AgonesSdk.ShutDownAsync();
     }
 
-    public async Task HealthChecker()
+    private async Task HealthChecker()
     {
         while (Mvc.ShouldAllExit == false)
         {
             var hs = await AgonesSdk.HealthAsync();
-            await Task.Delay(3000);
+            await Task.Delay(3000, Mvc.ImmediateExit.Token);
         }
     }
-    
+
     private async Task ManageConnections()
     {
         var listener = new TcpListener(IPAddress.Any, Port);
@@ -75,34 +70,12 @@ public class Server
         {
             var status = await AgonesSdk.ReadyAsync();
             HealthChecker();
+            PlayerCapacity = await AgonesSdk.Alpha().GetPlayerCapacityAsync();
+
             while (!Mvc.ShouldAllExit)
             {
-                var newClient = await listener.AcceptTcpClientAsync();
-                var cts = new CancellationTokenSource();
-                ConnectionMutex.WaitOne();
-                if (ConnectedClientIds.Count >= MaxClients)
-                {
-                    ConnectionMutex.ReleaseMutex();
-                    using (var stream = newClient.GetStream())
-                    {
-                        byte[] denyMsg = new byte[sizeof(long)];
-                        BinaryPrimitives.WriteInt64LittleEndian(denyMsg, -1);
-                        await stream.WriteAsync(denyMsg);
-                    }
-                    newClient.Close();
-                    continue;
-                }
-                var id = GenerateNewPlayerId(newClient);
-                ConnectedClientIds.Add(id);
-                
-                Mvc.GameMutex.WaitOne();
-                Controller.AddPlayer(id);
-                Mvc.GameMutex.ReleaseMutex();
-                
-                var snapshots = RunServerToClientConnection(id, newClient, cts);
-                var commands = RunClientToServerInput(id, newClient, cts);
-                ConnectedClients.Add(id, (snapshots, commands));
-                ConnectionMutex.ReleaseMutex();
+                var newClient = await listener.AcceptTcpClientAsync(Mvc.ImmediateExit.Token);
+                await AddPlayer(newClient);
             }
         }
         catch (Exception e)
@@ -111,150 +84,87 @@ public class Server
         }
         finally
         {
-            foreach (var (clientInput, clientOutput) in ConnectedClients.Values)
-            {
-                clientInput.Dispose();
-                clientOutput.Dispose();
-            }
-            await Task.WhenAll(ConnectedClients.SelectMany(t => new []{t.Value.Item1, t.Value.Item2}));
-        
             listener.Stop();
         }
     }
-    
-    private async Task RunServerToClientConnection(long playerId, TcpClient client, CancellationTokenSource cts)
+
+    private async Task AddPlayer(TcpClient newClient)
     {
-        try
+        ConnectionMutex.WaitOne();
+        var id = GenerateNewPlayerId(newClient);
+        var connectSuccess = await AgonesSdk.Alpha().PlayerConnectAsync(id.ToString());
+        var pCh = Channel.CreateUnbounded<GameSnapshot?>();
+        if (!Channels.TryAdd(id, pCh) || !ConnectedClients.TryAdd(id,
+                new ClientContext(id, newClient, Mvc.ImmediateExit.Token, Mvc, CommandsChannel, pCh)))
         {
-            using (client)
+            ConnectionMutex.ReleaseMutex();
+            Console.WriteLine("Failed to add player Server shutting down");
+            throw new Exception();
+        }
+
+        if (!connectSuccess)
+        {
+            ConnectionMutex.ReleaseMutex();
+            await using (var stream = newClient.GetStream())
             {
-                Console.WriteLine($"Server - Connected to client {client.Client.RemoteEndPoint}");
-                await using (var stream = client.GetStream())
-                {
-                    await stream.WriteAsync(BitConverter.GetBytes(playerId));
-                    while (!Mvc.ShouldAllExit)
-                    {
-                        var gameSnapshot = await Channels[playerId].Reader.ReadAsync();
-                        
-                        if (gameSnapshot == null)
-                        {
-                            await cts.CancelAsync();
-                            
-                            ConnectionMutex.WaitOne();
-                            ConnectedClients.Remove(playerId);
-                            ConnectedClientIds.Remove(playerId);
-                            Channels.Remove(playerId);
-                            ConnectionMutex.ReleaseMutex();
-                            
-                            client.Close();
-                            return;
-                        }
-                        
-                        await PrepareAndWriteCompressedMessage(stream, gameSnapshot, CompressionLevel.SmallestSize);
-                        
-                        Console.WriteLine($"Server - Player {playerId} was sent an update");
-                    }
-                }
+                var denyMsg = new byte[sizeof(long)];
+                BinaryPrimitives.WriteInt64LittleEndian(denyMsg, -1);
+                await stream.WriteAsync(denyMsg, Mvc.ImmediateExit.Token);
             }
+
+            newClient.Close();
+            return;
         }
-        catch (Exception e)
+
+        Task.Run(async () =>
         {
-            Console.WriteLine(e);
-            client.Close();
-        }
-        finally
-        {
-            Console.WriteLine($"Player {playerId} output disconnected");
-        }
+            await ConnectedClients[id].HandleClient();
+            await RemovePlayer(id);
+        });
+
+        Mvc.GameMutex.WaitOne();
+        Controller.AddPlayer(id);
+        Mvc.GameMutex.ReleaseMutex();
+
+        Console.WriteLine($"Player {id} connected");
+
+        ConnectionMutex.ReleaseMutex();
     }
-    private async Task PrepareAndWriteCompressedMessage(NetworkStream stream, GameSnapshot gameSnapshot, CompressionLevel compressionLevel)
+
+    private async Task RemovePlayer(long id)
     {
-        var json = JsonSerializer.Serialize(gameSnapshot);
-        var serializedJson = JsonSerializer.SerializeToUtf8Bytes(gameSnapshot);
-        var preCompressedLength = serializedJson.Length;
-        using var ms = new MemoryStream();
-        await using(var gzip = new GZipStream(ms, compressionLevel))
+        var disconnectSuccess = await AgonesSdk.Alpha().PlayerDisconnectAsync(id.ToString());
+        var removeChannelSuccess = Channels.TryRemove(id, out _);
+        var clientSuccess = ConnectedClients.TryRemove(id, out _);
+
+        if (!(disconnectSuccess && removeChannelSuccess && clientSuccess))
         {
-            await gzip.WriteAsync(serializedJson);
+            Console.WriteLine("Failed to disconnect player Server shutting down");
+            throw new Exception();
         }
-        var compressedBuffer = ms.ToArray();
-        var compressedLength = compressedBuffer.Length;
-        await stream.WriteAsync(BitConverter.GetBytes(compressedLength));
-        await stream.WriteAsync(BitConverter.GetBytes(preCompressedLength));
-        await stream.WriteAsync(compressedBuffer, 0, compressedLength);
+
+        Mvc.GameMutex.WaitOne();
+        Controller.RemovePlayer(id);
+        Mvc.GameMutex.ReleaseMutex();
+        Console.WriteLine($"Player {id} disconnected");
+        CheckGameEnd();
     }
 
-    private async Task RunClientToServerInput(long playerId, TcpClient client, CancellationTokenSource cts)
+    private void CheckGameEnd()
     {
-        try
+        var count = ConnectedClients.Count;
+        if (count == 0)
         {
-            using (client)
-            {
-                await using (var stream = client.GetStream())
-                {
-                    while (!Mvc.ShouldAllExit)
-                    {
-                        var receivedCommand = await ReceiveAndDecompressCommand(stream);
-
-                        Console.WriteLine($"Server - Received command from Player {playerId}");
-
-                        CommandMutex.WaitOne();
-                        await CommandsChannel.Writer.WriteAsync(receivedCommand);
-                        CommandMutex.ReleaseMutex();
-
-                        if (receivedCommand.GetType() == typeof(ExitCommand))
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            client.Close();
-        }
-        finally
-        {
-            Console.WriteLine($"Player {playerId} input disconnected");
+            //todo
         }
     }
-    
-    private async Task<Command> ReceiveAndDecompressCommand(NetworkStream stream)
-    {
-        var msgCompressedLen = new byte[4];
-        var msgPreCompressedLen = new byte[4];
-        await stream.ReadExactlyAsync(msgCompressedLen, 0, sizeof(int));
-        var compressedLen = BitConverter.ToInt32(msgCompressedLen, 0);
-        await stream.ReadExactlyAsync(msgPreCompressedLen, 0, sizeof(int));
-        var preCompressedLen = BitConverter.ToInt32(msgPreCompressedLen, 0);
-        
-        var compressedBuffer = new byte[compressedLen];
-        await stream.ReadExactlyAsync(compressedBuffer, 0, compressedLen);
 
-        using var msOut = new MemoryStream();
-        byte[] decompressedBuffer;
-        using (var ms = new MemoryStream(compressedBuffer, 0, compressedLen))
-        {
-            await using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
-            {
-                gzip.CopyTo(msOut, compressedLen);
-                decompressedBuffer = msOut.ToArray();
-            }
-        }
-
-        var recCommand = JsonSerializer.Deserialize<Command>(decompressedBuffer);
-
-        if (recCommand == null) throw new Exception("Json deserialization error");
-        return recCommand;
-    }
-    
-    private long GenerateNewPlayerId(TcpClient client)
+private long GenerateNewPlayerId(TcpClient client)
     {
         var endPoint = client.Client.RemoteEndPoint;
         if (endPoint == null) throw new NullReferenceException();
         var strEnd = endPoint.ToString();
+        if (strEnd == null) throw new NullReferenceException();
         var ipPort = strEnd.Split(':');
         var ip = ipPort[0].Split('.');
         long id = 0;
@@ -265,7 +175,7 @@ public class Server
             id <<= 8;
         }
         id <<= 32;
-        int port = int.Parse(ipPort[1]);
+        var port = int.Parse(ipPort[1]);
         id += port;
         return id;
     }

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Model;
 using Model.Commands;
@@ -13,13 +14,13 @@ public class Input
     private Channel<Command> CommandsChannel { get; set; }
     private bool WasStateChangedBetweenMoments { get; set; }
     private SemaphoreSlim ResponsivenessSemaphore { get; set; }
-    private Dictionary<long, Channel<GameSnapshot?>> PlayerChannels { get; set; }
+    private ConcurrentDictionary<long, Channel<GameSnapshot?>> PlayerChannels { get; set; }
     private Mutex ConnectionMutex { get; set; }
 
-    public Input(GameState state, MvcSynchronization sync, Channel<Command> commandsChannel,
-        Dictionary<long, Channel<GameSnapshot?>> playerChannels, Mutex connectionMutex)
+    public Input(MvcSynchronization sync, Channel<Command> commandsChannel,
+        ConcurrentDictionary<long, Channel<GameSnapshot?>> playerChannels, Mutex connectionMutex)
     {
-        State = state;
+        State = new GameState(sync);
         Sync = sync;
         CommandsChannel = commandsChannel;
         WasStateChangedBetweenMoments = false;
@@ -36,7 +37,7 @@ public class Input
             var resp = ResponsivenessMaintainer(respMoment, cts);
             while (Sync.ShouldExitModel == false)
             {
-                await Task.Delay(State.MomentDurationMilliseconds);
+                await Task.Delay(State.MomentDurationMilliseconds, Sync.ImmediateExit.Token);
 
                 ConnectionMutex.WaitOne();
                 Sync.GameMutex.WaitOne();
@@ -50,8 +51,8 @@ public class Input
                 ConnectionMutex.ReleaseMutex();
             }
 
-            cts.Cancel();
-            resp.Wait(cts.Token);
+            await cts.CancelAsync();
+            await resp.WaitAsync(cts.Token);
         }
         catch (Exception e)
         {
@@ -95,7 +96,7 @@ public class Input
         {
             while (!Sync.ShouldExitController)
             {
-                var command = await CommandsChannel.Reader.ReadAsync();
+                var command = await CommandsChannel.Reader.ReadAsync(Sync.ImmediateExit.Token);
                 Sync.GameMutex.WaitOne();
                 command.Execute(State);
 
@@ -119,8 +120,10 @@ public class Input
     public void AddPlayer(long playerId)
     {
         State.AddPlayer(playerId);
-        var channel = Channel.CreateUnbounded<GameSnapshot?>();
-        PlayerChannels.Add(playerId, channel);
+    }
+    public void RemovePlayer(long playerId)
+    {
+        State.RemovePlayer(playerId);
     }
     
     private async Task BroadcastStates()
@@ -132,7 +135,7 @@ public class Input
             {
                 relativeState = new GameSnapshot(State, channel.Key);  
             }
-            await channel.Value.Writer.WriteAsync(relativeState);
+            await channel.Value.Writer.WriteAsync(relativeState, Sync.ImmediateExit.Token);
         }
     }
 }
