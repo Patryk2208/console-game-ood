@@ -35,7 +35,7 @@ public class Input
             var cts = new CancellationTokenSource();
             var respMoment = Math.Min(State.MomentDurationMilliseconds, 10);
             var resp = ResponsivenessMaintainer(respMoment, cts);
-            while (Sync.ShouldExitModel == false)
+            while (!Sync.ImmediateExit.IsCancellationRequested)
             {
                 await Task.Delay(State.MomentDurationMilliseconds, Sync.ImmediateExit.Token);
 
@@ -57,7 +57,7 @@ public class Input
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            await Sync.ImmediateExit.CancelAsync();
         }
     }
 
@@ -65,7 +65,7 @@ public class Input
     {
         try
         {
-            while (cts.IsCancellationRequested == false)
+            while (!Sync.ImmediateExit.IsCancellationRequested)
             {
                 await Task.Delay(respMoment);
 
@@ -94,7 +94,7 @@ public class Input
     {
         try
         {
-            while (!Sync.ShouldExitController)
+            while (!Sync.ImmediateExit.IsCancellationRequested)
             {
                 var command = await CommandsChannel.Reader.ReadAsync(Sync.ImmediateExit.Token);
                 Sync.GameMutex.WaitOne();
@@ -113,7 +113,7 @@ public class Input
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            await Sync.ImmediateExit.CancelAsync();
         }
     }
 

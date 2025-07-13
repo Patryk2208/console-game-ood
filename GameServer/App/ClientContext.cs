@@ -14,18 +14,16 @@ public class ClientContext
 {
     private long PlayerId { get; set; }
     private TcpClient Client { get; set; }
-    private CancellationToken Ct { get; set; }
-    private MvcSynchronization Mvc { get; set; }
+    private CancellationTokenSource Cts { get; set; }
     private Channel<GameSnapshot?> SnapshotsChannel { get; set; } //todo maybe possible without channels
     private Channel<Command> CommonCommandsChannel { get; set; }
 
-    public ClientContext(long playerId, TcpClient client, CancellationToken ct, MvcSynchronization mvc,
+    public ClientContext(long playerId, TcpClient client, CancellationTokenSource cts,
         Channel<Command> commandsChannel, Channel<GameSnapshot?> snapshotsChannel)
     {
         PlayerId = playerId;
         Client = client;
-        Ct = ct;
-        Mvc = mvc;
+        Cts = cts;
         CommonCommandsChannel = commandsChannel;
         SnapshotsChannel = snapshotsChannel;
     }
@@ -42,6 +40,7 @@ public class ClientContext
                 {
                     connections[0] = RunServerToClientConnection(netStream);
                     connections[1] = RunClientToServerInput(netStream);
+                    Task.WaitAll(connections);
                 }
             }
 
@@ -49,23 +48,21 @@ public class ClientContext
         catch (Exception e)
         {
             Console.WriteLine(e);
-            throw;
+            await Cts.CancelAsync();
         }
-        
-        Task.WaitAll(connections, Ct);
     }
     
     private async Task RunServerToClientConnection(NetworkStream stream)
     {
-        await stream.WriteAsync(BitConverter.GetBytes(PlayerId), Ct);
-        while (!Mvc.ShouldAllExit)
+        await stream.WriteAsync(BitConverter.GetBytes(PlayerId), Cts.Token);
+        while (!Cts.IsCancellationRequested)
         {
-            var gameSnapshot = await SnapshotsChannel.Reader.ReadAsync(Ct);
+            var gameSnapshot = await SnapshotsChannel.Reader.ReadAsync(Cts.Token);
             
             if (gameSnapshot == null)
             {
-                //todo
-                return;
+                await Cts.CancelAsync();
+                throw new Exception("null snapshot received, client disconnected");
             }
             
             await PrepareAndWriteCompressedMessage(stream, gameSnapshot, CompressionLevel.SmallestSize);
@@ -81,29 +78,28 @@ public class ClientContext
         using var ms = new MemoryStream();
         await using(var gzip = new GZipStream(ms, compressionLevel))
         {
-            await gzip.WriteAsync(serializedJson, Ct);
+            await gzip.WriteAsync(serializedJson, Cts.Token);
         }
         var compressedBuffer = ms.ToArray();
         var compressedLength = compressedBuffer.Length;
-        await stream.WriteAsync(BitConverter.GetBytes(compressedLength), Ct);
-        await stream.WriteAsync(BitConverter.GetBytes(preCompressedLength), Ct);
-        await stream.WriteAsync(compressedBuffer, 0, compressedLength, Ct);
+        await stream.WriteAsync(BitConverter.GetBytes(compressedLength), Cts.Token);
+        await stream.WriteAsync(BitConverter.GetBytes(preCompressedLength), Cts.Token);
+        await stream.WriteAsync(compressedBuffer, 0, compressedLength, Cts.Token);
     }
 
     private async Task RunClientToServerInput(NetworkStream stream)
     {
-        while (!Mvc.ShouldAllExit)
+        while (!Cts.IsCancellationRequested)
         {
             var receivedCommand = await ReceiveAndDecompressCommand(stream);
 
             Console.WriteLine($"Server - Received command from Player {PlayerId}");
 
-            await CommonCommandsChannel.Writer.WriteAsync(receivedCommand, Ct);
+            await CommonCommandsChannel.Writer.WriteAsync(receivedCommand, Cts.Token);
 
             if (receivedCommand.GetType() == typeof(ExitCommand))
             {
-                //todo
-                break;
+                await Cts.CancelAsync();
             }
         }
     }
@@ -112,13 +108,13 @@ public class ClientContext
     {
         var msgCompressedLen = new byte[4];
         var msgPreCompressedLen = new byte[4];
-        await stream.ReadExactlyAsync(msgCompressedLen, 0, sizeof(int), Ct);
+        await stream.ReadExactlyAsync(msgCompressedLen, 0, sizeof(int), Cts.Token);
         var compressedLen = BitConverter.ToInt32(msgCompressedLen, 0);
-        await stream.ReadExactlyAsync(msgPreCompressedLen, 0, sizeof(int), Ct);
+        await stream.ReadExactlyAsync(msgPreCompressedLen, 0, sizeof(int), Cts.Token);
         var preCompressedLen = BitConverter.ToInt32(msgPreCompressedLen, 0);
         
         var compressedBuffer = new byte[compressedLen];
-        await stream.ReadExactlyAsync(compressedBuffer, 0, compressedLen, Ct);
+        await stream.ReadExactlyAsync(compressedBuffer, 0, compressedLen, Cts.Token);
 
         using var msOut = new MemoryStream();
         byte[] decompressedBuffer;
@@ -126,7 +122,7 @@ public class ClientContext
         {
             await using (var gzip = new GZipStream(ms, CompressionMode.Decompress))
             {
-                await gzip.CopyToAsync(msOut, compressedLen, Ct);
+                await gzip.CopyToAsync(msOut, compressedLen, Cts.Token);
                 decompressedBuffer = msOut.ToArray();
             }
         }

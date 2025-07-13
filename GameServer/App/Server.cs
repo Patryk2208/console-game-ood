@@ -54,7 +54,7 @@ public class Server
 
     private async Task HealthChecker()
     {
-        while (Mvc.ShouldAllExit == false)
+        while (!Mvc.ImmediateExit.IsCancellationRequested)
         {
             var hs = await AgonesSdk.HealthAsync();
             await Task.Delay(3000, Mvc.ImmediateExit.Token);
@@ -72,15 +72,18 @@ public class Server
             HealthChecker();
             PlayerCapacity = await AgonesSdk.Alpha().GetPlayerCapacityAsync();
 
-            while (!Mvc.ShouldAllExit)
+            while (!Mvc.ImmediateExit.IsCancellationRequested)
             {
                 var newClient = await listener.AcceptTcpClientAsync(Mvc.ImmediateExit.Token);
+                ConnectionMutex.WaitOne();
                 await AddPlayer(newClient);
+                ConnectionMutex.ReleaseMutex();
             }
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            await Mvc.ImmediateExit.CancelAsync();
         }
         finally
         {
@@ -90,12 +93,11 @@ public class Server
 
     private async Task AddPlayer(TcpClient newClient)
     {
-        ConnectionMutex.WaitOne();
         var id = GenerateNewPlayerId(newClient);
         var connectSuccess = await AgonesSdk.Alpha().PlayerConnectAsync(id.ToString());
         var pCh = Channel.CreateUnbounded<GameSnapshot?>();
         if (!Channels.TryAdd(id, pCh) || !ConnectedClients.TryAdd(id,
-                new ClientContext(id, newClient, Mvc.ImmediateExit.Token, Mvc, CommandsChannel, pCh)))
+                new ClientContext(id, newClient, new CancellationTokenSource(), CommandsChannel, pCh)))
         {
             ConnectionMutex.ReleaseMutex();
             Console.WriteLine("Failed to add player Server shutting down");
@@ -127,8 +129,6 @@ public class Server
         Mvc.GameMutex.ReleaseMutex();
 
         Console.WriteLine($"Player {id} connected");
-
-        ConnectionMutex.ReleaseMutex();
     }
 
     private async Task RemovePlayer(long id)
@@ -152,11 +152,14 @@ public class Server
 
     private void CheckGameEnd()
     {
+        ConnectionMutex.WaitOne();
         var count = ConnectedClients.Count;
         if (count == 0)
         {
-            //todo
+            Console.WriteLine("Ending gameserver");
+            Mvc.ImmediateExit.Cancel();
         }
+        ConnectionMutex.ReleaseMutex();
     }
 
 private long GenerateNewPlayerId(TcpClient client)

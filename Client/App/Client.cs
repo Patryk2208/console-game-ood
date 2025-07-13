@@ -23,7 +23,7 @@ public class Client
     private IPAddress ServerIp { get; set; }
     private int ServerPort { get; set; }
 
-    public Client(IPAddress? serverIp = null, int serverPort = 5555)
+    public Client(IPAddress? serverIp = null, int serverPort = 7777)
     {
         Id = long.MaxValue;
         var mvc = new MvcSynchronization();
@@ -33,8 +33,6 @@ public class Client
         CommandChannel = Channel.CreateUnbounded<Command>();
         ServerIp = serverIp ?? IPAddress.Loopback;
         ServerPort = serverPort;
-        //todo initialize handlers
-
     }
 
     public async Task Run()
@@ -44,7 +42,7 @@ public class Client
         {
             using (var client = new TcpClient())
             {
-                await client.ConnectAsync(ServerIp, ServerPort);
+                await client.ConnectAsync(ServerIp, ServerPort); 
                 await using (var stream = client.GetStream())
                 {
                     var idBytes = new byte[8];
@@ -53,6 +51,7 @@ public class Client
                     if (Id == -1)
                     {
                         StateModel.Sync.ShouldAllExit = true;
+                        Console.WriteLine("sth wrong exiting");
                         return;
                     }
                     
