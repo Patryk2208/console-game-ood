@@ -142,10 +142,6 @@ public class Server
             Console.WriteLine("Failed to disconnect player Server shutting down");
             throw new Exception();
         }
-
-        Mvc.GameMutex.WaitOne();
-        Controller.RemovePlayer(id);
-        Mvc.GameMutex.ReleaseMutex();
         Console.WriteLine($"Player {id} disconnected");
         CheckGameEnd();
     }
