@@ -9,7 +9,7 @@ static class Program
         try
         {
             var (ip, port) = ParseArgs(args);
-            Console.WriteLine($"Connecting client to {ip}:{port}");
+            //Console.WriteLine($"Connecting client to {ip}:{port}");
             var c = new App.Client(ip, port);
             await c.Run();
         }

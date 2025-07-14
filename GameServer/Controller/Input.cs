@@ -15,10 +15,10 @@ public class Input
     private bool WasStateChangedBetweenMoments { get; set; }
     private SemaphoreSlim ResponsivenessSemaphore { get; set; }
     private ConcurrentDictionary<long, Channel<GameSnapshot?>> PlayerChannels { get; set; }
-    private Mutex ConnectionMutex { get; set; }
+    private SemaphoreSlim ConnectionSemaphore { get; set; }
 
     public Input(MvcSynchronization sync, Channel<Command> commandsChannel,
-        ConcurrentDictionary<long, Channel<GameSnapshot?>> playerChannels, Mutex connectionMutex)
+        ConcurrentDictionary<long, Channel<GameSnapshot?>> playerChannels, SemaphoreSlim connectionSemaphore)
     {
         State = new GameState(sync);
         Sync = sync;
@@ -26,42 +26,53 @@ public class Input
         WasStateChangedBetweenMoments = false;
         ResponsivenessSemaphore = new SemaphoreSlim(0, 1);
         PlayerChannels = playerChannels;
-        ConnectionMutex = connectionMutex;
+        ConnectionSemaphore = connectionSemaphore;
     }
     public async Task RunGame()
     {
         try
         {
-            var cts = new CancellationTokenSource();
             var respMoment = Math.Min(State.MomentDurationMilliseconds, 10);
-            var resp = ResponsivenessMaintainer(respMoment, cts);
+            var resp = ResponsivenessMaintainer(respMoment);
             while (!Sync.ImmediateExit.IsCancellationRequested)
             {
                 await Task.Delay(State.MomentDurationMilliseconds, Sync.ImmediateExit.Token);
 
-                ConnectionMutex.WaitOne();
+                await ConnectionSemaphore.WaitAsync(Sync.ImmediateExit.Token);
                 Sync.GameMutex.WaitOne();
 
                 await BroadcastStates();
 
                 State.MomentChangedEvent.NotifyObservers(State, 0);
                 ++State.CurrentMoment;
-
+                
                 Sync.GameMutex.ReleaseMutex();
-                ConnectionMutex.ReleaseMutex();
+                ConnectionSemaphore.Release();
             }
-
-            await cts.CancelAsync();
-            await resp.WaitAsync(cts.Token);
+            await resp.WaitAsync(Sync.ImmediateExit.Token);
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            try
+            {
+                Sync.GameMutex.ReleaseMutex();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+
+            if (ConnectionSemaphore.CurrentCount == 0)
+            {
+                ConnectionSemaphore.Release();
+            }
+            Console.WriteLine("Run Game closes correctly");
             await Sync.ImmediateExit.CancelAsync();
         }
     }
 
-    private async Task ResponsivenessMaintainer(int respMoment, CancellationTokenSource cts)
+    private async Task ResponsivenessMaintainer(int respMoment)
     {
         try
         {
@@ -69,9 +80,9 @@ public class Input
             {
                 await Task.Delay(respMoment);
 
-                await ResponsivenessSemaphore.WaitAsync();
+                await ResponsivenessSemaphore.WaitAsync(Sync.ImmediateExit.Token);
 
-                ConnectionMutex.WaitOne();
+                await ConnectionSemaphore.WaitAsync(Sync.ImmediateExit.Token);
                 Sync.GameMutex.WaitOne();
                 if (WasStateChangedBetweenMoments)
                 {
@@ -80,12 +91,25 @@ public class Input
                 }
 
                 Sync.GameMutex.ReleaseMutex();
-                ConnectionMutex.ReleaseMutex();
+                ConnectionSemaphore.Release();
             }
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            try
+            {
+                Sync.GameMutex.ReleaseMutex();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+
+            if (ConnectionSemaphore.CurrentCount == 0)
+            {
+                ConnectionSemaphore.Release();
+            }
             throw;
         }
     }
@@ -113,6 +137,15 @@ public class Input
         catch (Exception e)
         {
             Console.WriteLine(e);
+            try
+            {
+                Sync.GameMutex.ReleaseMutex();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
+            Console.WriteLine("Run input closes correctly");
             await Sync.ImmediateExit.CancelAsync();
         }
     }

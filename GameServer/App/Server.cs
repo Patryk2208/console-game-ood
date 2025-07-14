@@ -21,7 +21,7 @@ public class Server
     private Input Controller { get; init; }
     private MvcSynchronization Mvc { get; init; }
     private ConcurrentDictionary<long, ClientContext> ConnectedClients { get; init; }
-    private Mutex ConnectionMutex { get; init; }
+    private SemaphoreSlim ConnectionSemaphore { get; init; }
     private ConcurrentDictionary<long, Channel<GameSnapshot?>> Channels { get; init; }
     private Channel<Command> CommandsChannel { get; init; }
     private int Port { get; set; }
@@ -32,11 +32,12 @@ public class Server
     {
         CommandsChannel = Channel.CreateUnbounded<Command>();
         Channels = new ConcurrentDictionary<long, Channel<GameSnapshot?>>();
-        ConnectionMutex = new Mutex();
+        ConnectionSemaphore = new SemaphoreSlim(1, 1);
         Mvc = new MvcSynchronization();
-        Controller = new Input(Mvc, CommandsChannel, Channels, ConnectionMutex);
+        Controller = new Input(Mvc, CommandsChannel, Channels, ConnectionSemaphore);
         Port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "7777");
         ConnectedClients = new ConcurrentDictionary<long, ClientContext>();
+        PlayerCapacity = 10;
         AgonesSdk = new AgonesSDK();
     }
 
@@ -70,19 +71,23 @@ public class Server
         {
             var status = await AgonesSdk.ReadyAsync();
             HealthChecker();
+            await AgonesSdk.Alpha().SetPlayerCapacityAsync(PlayerCapacity);
             PlayerCapacity = await AgonesSdk.Alpha().GetPlayerCapacityAsync();
-
+            Console.WriteLine($"Server ready, player capacity: {PlayerCapacity}");
             while (!Mvc.ImmediateExit.IsCancellationRequested)
             {
                 var newClient = await listener.AcceptTcpClientAsync(Mvc.ImmediateExit.Token);
-                ConnectionMutex.WaitOne();
                 await AddPlayer(newClient);
-                ConnectionMutex.ReleaseMutex();
             }
         }
         catch (Exception e)
         {
             Console.WriteLine(e);
+            if (ConnectionSemaphore.CurrentCount == 0)
+            {
+                ConnectionSemaphore.Release();
+            }
+            Console.WriteLine("Manage connections closes correctly");
             await Mvc.ImmediateExit.CancelAsync();
         }
         finally
@@ -94,19 +99,20 @@ public class Server
     private async Task AddPlayer(TcpClient newClient)
     {
         var id = GenerateNewPlayerId(newClient);
+        await ConnectionSemaphore.WaitAsync(Mvc.ImmediateExit.Token);
         var connectSuccess = await AgonesSdk.Alpha().PlayerConnectAsync(id.ToString());
         var pCh = Channel.CreateUnbounded<GameSnapshot?>();
         if (!Channels.TryAdd(id, pCh) || !ConnectedClients.TryAdd(id,
                 new ClientContext(id, newClient, new CancellationTokenSource(), CommandsChannel, pCh)))
         {
-            ConnectionMutex.ReleaseMutex();
+            ConnectionSemaphore.Release();
             Console.WriteLine("Failed to add player Server shutting down");
             throw new Exception();
         }
 
         if (!connectSuccess)
         {
-            ConnectionMutex.ReleaseMutex();
+            ConnectionSemaphore.Release();
             await using (var stream = newClient.GetStream())
             {
                 var denyMsg = new byte[sizeof(long)];
@@ -118,44 +124,48 @@ public class Server
             return;
         }
 
+        Mvc.GameMutex.WaitOne();
+        Controller.AddPlayer(id);
+        Mvc.GameMutex.ReleaseMutex();
+        ConnectionSemaphore.Release();
+        
         Task.Run(async () =>
         {
             await ConnectedClients[id].HandleClient();
             await RemovePlayer(id);
         });
-
-        Mvc.GameMutex.WaitOne();
-        Controller.AddPlayer(id);
-        Mvc.GameMutex.ReleaseMutex();
-
+        
         Console.WriteLine($"Player {id} connected");
     }
 
     private async Task RemovePlayer(long id)
     {
+        await ConnectionSemaphore.WaitAsync(Mvc.ImmediateExit.Token);
         var disconnectSuccess = await AgonesSdk.Alpha().PlayerDisconnectAsync(id.ToString());
         var removeChannelSuccess = Channels.TryRemove(id, out _);
         var clientSuccess = ConnectedClients.TryRemove(id, out _);
 
         if (!(disconnectSuccess && removeChannelSuccess && clientSuccess))
         {
+            ConnectionSemaphore.Release();
             Console.WriteLine("Failed to disconnect player Server shutting down");
             throw new Exception();
         }
+        ConnectionSemaphore.Release();
         Console.WriteLine($"Player {id} disconnected");
         CheckGameEnd();
     }
 
     private void CheckGameEnd()
     {
-        ConnectionMutex.WaitOne();
+        ConnectionSemaphore.Wait();
         var count = ConnectedClients.Count;
         if (count == 0)
         {
             Console.WriteLine("Ending gameserver");
             Mvc.ImmediateExit.Cancel();
         }
-        ConnectionMutex.ReleaseMutex();
+        ConnectionSemaphore.Release();
     }
 
 private long GenerateNewPlayerId(TcpClient client)
