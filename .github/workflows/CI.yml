@@ -15,7 +15,7 @@ jobs:
       name: Game-gcp-environment
     steps:
     - name: Use Environment Secret
-      run: echo ${{ secrets.GKE_REGION }}
+      run: echo "Region = ${{ secrets.GKE_REGION }}"
     # Setup section
     - name: Checkout code
       uses: actions/checkout@v4
