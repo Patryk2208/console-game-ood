@@ -11,8 +11,6 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    environment:
-      name: Game-gcp-environment
     steps:
     # Setup section
     - name: Checkout code
