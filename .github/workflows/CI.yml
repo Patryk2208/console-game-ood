@@ -1,0 +1,88 @@
+name: CI
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  test-and-push:
+    runs-on: windows-latest
+    timeout-minutes: 30    
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    environment:
+      name: Game-gcp-environment
+    steps:
+    # Setup section
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Cache NuGet packages
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.nuget/packages
+          **/bin
+          **/obj
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    # Build section
+    - name: Restore deps
+      run: dotnet restore //todo
+      
+    - name: Build
+      run: dotnet build //todo --configuration Release --no-restore
+
+
+    # Test section
+    # todo
+    - name: NuGet vulnerability scan
+      run: |
+        dotnet list package --vulnerable --include-transitive
+      continue-on-error: true
+
+    # GCP auth section
+    - name: Authenticate to GCP
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ secrets.GCP_CI_WORKLOAD_ID_PROVIDER }}
+        service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
+        token_format: access_token
+
+    # Docker section
+    - name: Docker auth
+      run: echo "${{ steps.auth.outputs.access_token }}" | docker login -u oauth2accesstoken --password-stdin https://${{ secrets.GKE_REGION }}-docker.pkg.dev
+    
+    - name: Docker buildx setup
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and push Gameserver
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: |
+          ${{ secrets.GKE_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/${{ secrets.GCP_GO_SERVER_IMAGE_NAME }}:${{ github.sha }}
+          ${{ secrets.GKE_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GAR_REPO }}/${{ secrets.GCP_GO_SERVER_IMAGE_NAME }}:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+  
+    
+    
+      
+    
+
+    
+    
+    
