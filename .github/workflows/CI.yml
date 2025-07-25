@@ -14,11 +14,6 @@ jobs:
     environment:
       name: Game-gcp-environment
     steps:
-    - name: Use Environment Secret
-      run: |
-        Write-Output "Region: $env:MY_SECRET"
-      env:
-        MY_SECRET: ${{ secrets.GKE_REGION }}
     # Setup section
     - name: Checkout code
       uses: actions/checkout@v4
@@ -41,10 +36,10 @@ jobs:
 
     # Build section
     - name: Restore deps
-      run: dotnet restore //todo
+      run: dotnet restore ./GameServer
       
     - name: Build
-      run: dotnet build //todo --configuration Release --no-restore
+      run: dotnet build ./GameServer --configuration Release --no-restore
 
 
     # Test section
