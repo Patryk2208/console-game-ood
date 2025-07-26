@@ -53,7 +53,11 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-    steps:    
+    steps:
+    # Setup section
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     # GCP auth section
     - name: Authenticate to GCP
       id: auth
