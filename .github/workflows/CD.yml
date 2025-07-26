@@ -13,6 +13,10 @@ jobs:
       id-token: write
       contents: read
     steps:
+    # Checkout section
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     # GCP auth section
     - name: Authenticate to GCP
       id: auth
@@ -20,7 +24,7 @@ jobs:
       with:
         workload_identity_provider: ${{ secrets.GCP_CD_WORKLOAD_ID_PROVIDER }}
         service_account: ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }}
-        
+        e
     # Cluster setup section
     - name: Configure GKE culster access
       uses: google-github-actions/get-gke-credentials@v1
