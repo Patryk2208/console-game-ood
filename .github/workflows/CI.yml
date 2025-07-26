@@ -5,7 +5,7 @@ on:
   pull_request:
     branches: [ main ]
 jobs:
-  test-and-push:
+  build-and-test:
     runs-on: windows-latest
     timeout-minutes: 30    
     permissions:
@@ -47,6 +47,13 @@ jobs:
         dotnet list package --vulnerable --include-transitive
       continue-on-error: true
 
+  dockerize-and-push:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30    
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:    
     # GCP auth section
     - name: Authenticate to GCP
       id: auth
