@@ -26,6 +26,7 @@ static class Program
         {
             throw new ArgumentException("Invalid number of arguments");
         }
+
         var ip = IPAddress.Parse(args[0]);
         var port = int.Parse(args[1]);
         return (ip, port);

@@ -62,6 +62,8 @@ public class Client
                     client.Close();
                 }
             }
+
+            Console.WriteLine("Ending");
         }
         catch (Exception ex)
         {
@@ -137,9 +139,6 @@ public class Client
             while (!StateModel.Sync.ShouldExitController)
             {
                 var key = Console.ReadKey(true);
-                StateModel.Sync.GameMutex.WaitOne();
-                View.Refresh();
-                StateModel.Sync.GameMutex.ReleaseMutex();
 
                 if (Id == long.MaxValue) continue;
                 var command = Controller.ParseInputIntoCommand(new InputUnit(Id, key));
